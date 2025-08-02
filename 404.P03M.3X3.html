@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404.P03M.3X3</title>
+
+  <!-- Fonts and External Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/github-calendar@latest/dist/github-calendar-responsive.css" />
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
+  <script src="https://kit.fontawesome.com/a2e0e6d47e.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+      background-color: #000;
+      color: #ef87aa;
+      font-family: 'Roboto Mono', monospace;
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: #1e1e1e;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+
+    nav a {
+      margin-left: 1.5rem;
+      text-decoration: none;
+      color: #ef87aa;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    h1 {
+      font-size: 2rem;
+      color: #ef87aa;
+    }
+    h2 {
+      font-size: 1.5rem;
+      color: #ef87aa;
+    }
+    nav a:hover {
+      color: #c91450;
+    }
+
+    nav .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    nav .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #1e1e1e;
+      min-width: 160px;
+      z-index: 30;
+    }
+
+    nav .dropdown-content a {
+      display: block;
+      padding: 0.5rem 1rem;
+      white-space: nowrap;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      top: 60px;
+      bottom: 50px;
+      z-index: 0;
+      position: fixed;
+      width: 100%;
+      height: calc(100% - 110px);
+      transition: opacity 0.3s ease;
+    }
+
+    .container .box {
+      transform-style: preserve-3d;
+      animation: animate 7s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .container .box span {
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.5) 90%, transparent);
+      text-transform: uppercase;
+      line-height: 0.76em;
+      position: fixed;
+      color: #f5427e;
+      font-size: 3.5em;
+      white-space: nowrap;
+      font-weight: bold;
+      padding: 0px 10px;
+      transform-style: preserve-3d;
+      text-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+      transform: translate(-50%, -50%) rotateX(calc(var(--i) * 22.5deg)) translateZ(109px);
+      pointer-events: none;
+      opacity: 0.4;
+      filter: brightness(0.8);
+      user-select: none;
+    }
+
+    .container .box span i {
+      font-style: initial;
+      pointer-events: none;
+    }
+
+    .container.dimmed {
+      opacity: 0.5;
+      filter: blur(2px);
+    }
+
+    @keyframes animate {
+      0% { transform: perspective(500px) rotateX(0deg) rotate(5deg); }
+      100% { transform: perspective(50px) rotateX(360deg) rotate(5deg); }
+    }
+
+    section {
+      display: none;
+      padding: 4rem 2rem;
+      max-width: 900px;
+      margin: auto;
+      z-index: 5;
+      position: relative;
+      flex-grow: 1;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    footer {
+      position: sticky;
+      bottom: 0;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 1rem;
+      background: #1e1e1e;
+      z-index: 20;
+    }
+
+    .typed {
+      font-size: 1.3rem; /* Change to your preferred size */ 
+      font-weight: 1rem; /* optional, if you want it bolder */ 
+      align-items: left;
+      color:#ef87aa
+    }
+
+    .typed-cursor {
+      font-size: 2rem; /* match your .typed size */
+      color: #ef87aa; /* match your theme color */
+      animation: blink 0.7s infinite;
+    }
+
+
+    #orb {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #ef87aa, #6f0126);
+      border-radius: 50%;
+      z-index: 9999;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px #ef87aa, 0 0 30px #ef87aa;
+    }
+
+    #offline-toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #8b0000;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #offline-toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="orb"></div>
+  <div id="offline-toast">“Signal lost. But memories remain.”</div>
+
+  <header>
+    <h1>404.P03M.3X3</h1>
+    <nav>
+      <a onclick="showSection('home')">Home ♡</a>
+      <div class="dropdown">
+        <a class="dropbtn">Poetry ▾</a>
+        <div class="dropdown-content">
+          <a onclick="showSection('poem-index')">Index</a>
+          <a onclick="showSection('allpoems')">All Poems</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <a class="dropbtn">Blogs ▾</a>
+        <div class="dropdown-content">
+          <a onclick="showSection('blog-index')">Index</a>
+          <a onclick="showSection('allblogs')">All Blogs</a>
+        </div>
+      </div>
+      <a onclick="showSection('aboutme')">AboutMe</a>
+    </nav>
+  </header>
+
+<div class="container">
+    <div class="box">
+      <span style="--i: 1">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 2">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 3">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 4">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 5">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 6">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 7">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 8">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 9">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 10">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 11">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 12">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 13">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 14">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 15">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+      <span style="--i: 16">
+        <i>Build</i>
+        With
+        <i>Laasya</i>
+      </span>
+    </div>
+  </div>
+
+  <section id="home" class="active">
+  <p>
+    <span class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
+  </p>
+  </section>
+  <section id="poem-index"><h2>Poetry Index</h2><p>Coming soon...</p></section>
+  <section id="allpoems"><h2>All Poems</h2><p>Coming soon...</p></section>
+  <section id="blog-index"><h2>Blog Index</h2><p>Coming soon...</p></section>
+  <section id="allblogs"><h2>All Blogs</h2><p>Coming soon...</p></section>
+  <section id="aboutme"><h2>About Me</h2><p>Student dev, chaos crafter, glitch poet. I write and build stories.</p></section>
+
+  <footer>
+    <p><strong>&copy; 2025 Laasya — All rights reserved.</strong></p>
+    <p>“In the end, we are all just echoes of our own stories.”</p>
+    <p><span style="cursor: pointer;" onclick="window.location.href='404.html'">404.</span>P03M.3X3 is a tribute to the glitches and gaps in our digital lives.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+      document.querySelector('.container').classList.toggle('dimmed', id !== 'home');
+    }
+document.addEventListener('DOMContentLoaded', () => {
+    const typedElement = document.querySelector('.typed');
+    if (typedElement) {
+      new Typed('.typed', {
+        strings: typedElement.getAttribute('data-typed-items').split(','),
+        typeSpeed: 150,
+        backSpeed: 40,
+        backDelay: 2000,
+        loop: true,
+        smartBackspace: true,
+        showCursor: true,
+        cursorChar: '|'
+      });
+    }
+  });
+
+    const orb = document.getElementById('orb');
+    document.addEventListener('mousemove', e => {
+      orb.style.left = e.clientX + 'px';
+      orb.style.top = e.clientY + 'px';
+    });
+
+    window.addEventListener('offline', () => {
+      document.body.classList.add('offline');
+      document.getElementById('offline-toast').classList.add('show');
+    });
+
+    window.addEventListener('online', () => {
+      document.body.classList.remove('offline');
+      document.getElementById('offline-toast').classList.remove('show');
+    });
+  </script>
+</body>
+</html>

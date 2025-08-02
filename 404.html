@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404.P03M.3X3</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0d0d0d;
+      color: #c91450;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .container {
+      padding: 3rem;
+      max-width: 700px;
+      z-index: 2;
+      animation: fadeIn 1.8s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 6.5rem;
+      letter-spacing: -1.5px;
+      margin-bottom: 0.6rem;
+      color: #c91450;
+    }
+
+    .subtext {
+      font-size: 1.4rem;
+      color: #c91450;
+      margin-bottom: 1rem;
+      opacity: 0.85;
+    }
+
+    .typewriter {
+      font-size: 1.1rem;
+      border-right: 2px solid #c91450;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      color: #c91450;
+      animation: typing 7.2s steps(38, end) forwards, blink 1s step-end infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    @keyframes blink {
+      0%, 100% { border-color: transparent; }
+      50% { border-color: #c91450; }
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 2.5rem;
+      padding: 0.8rem 1.8rem;
+      border-radius: 14px;
+      background-color: rgba(201, 20, 80, 0.06);
+      border: 1px solid rgba(201, 20, 80, 0.3);
+      color: #c91450;
+      text-decoration: none;
+      font-size: 0.95rem;
+      backdrop-filter: blur(4px);
+      transition: all 0.3s ease;
+    }
+
+    a:hover {
+      background-color: rgba(201, 20, 80, 0.12);
+      transform: translateY(-2px);
+    }
+
+
+    .initial {
+      position: absolute;
+      font-size: 9rem;
+      font-weight: 600;
+      color: #c91450;
+      opacity: 0.1816;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .s { top: 10%; left: 15%; animation: floatS 9s ease-in-out infinite; }
+    .l { bottom: 15%; right: 12%; animation: floatG 11s ease-in-out infinite; }
+    .g { top: 40%; left: 45%; animation: floatL 13s ease-in-out infinite; }
+
+    @keyframes floatS {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(-20px) rotate(45deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    @keyframes floatL {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(30px) rotate(-45deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    @keyframes floatG {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(-15px) rotate(45deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background Initials -->
+  <div class="initial s">S</div>
+  <div class="initial g">G</div>
+  <div class="initial l">L</div>
+
+  <div class="container">
+    <h1>404</h1>
+    <p class="subtext">This page didn’t show up for the performance.</p>
+    <div class="typewriter">Or maybe it ghosted. Either way... it’s not here.</div>
+    <a onclick="window.location.href='404.P03M.3X3.html'">Take me somewhere that exists</a>
+  </div>
+</body>
+</html>
