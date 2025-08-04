@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>P03M.html</title>
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #c91450;
+      font-family: 'Courier New', Courier, monospace;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      background: #000;
+      border-bottom: 2px solid #c91450;
+      text-align: center;
+      z-index: 1000;
+    }
+    nav button {
+      background: transparent;
+      color: #c91450;
+      border: none;
+      padding: 15px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background: #720b2d;
+      color: #fc9cbc;
+    }
+    .section {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    .terminal {
+      background: #000000;
+      border: 2px solid #c91450;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    .question {
+      margin-bottom: 10px;
+    }
+    input[type=text] {
+      width: 90%;
+      padding: 10px;
+      font-size: 1rem;
+      background: #000;
+      color: #c91450;
+      border: 1px solid #c91450;
+    }
+    button.action {
+      background: #c91450;
+      color: #000;
+      padding: 10px 20px;
+      font-weight: bold;
+      border: none;
+      margin-top: 10px;
+    }
+    button.action:hover {
+      background: #fc9cbc;
+      color: #720b2d;
+    }
+    .correct, .incorrect {
+      margin-top: 10px;
+      color: #c91450;
+    }
+    textarea {
+      width: 90%;
+      height: 200px;
+      background: #000;
+      color: #c91450;
+      border: 1px solid #c91450;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+  .site-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #000;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid #000;
+  z-index: 1000;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-family: 'Roboto Mono', monospace;
+  color: #c91450;
+  background: #000;
+  border: 2px solid #c91450;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.back-btn:hover {
+  background: #720b2d;
+  color: #fc9cbc;
+}
+
+  </style>
+</head>
+<body>
+
+  <nav>
+    <button onclick="showSection('puzzleSection')">♡ Puzzle ♡</button>
+    <button onclick="showSection('converterSection')">♡ Convertor ♡</button>
+  </nav>
+
+  <div id="puzzleSection" class="section active">
+    <div class="terminal">
+      <div id="puzzleNum">PUZZLE 1/5</div>
+      <div class="question" id="question">^9|^14|^6|^14||^20|^15||^19|^3||^14|^23|^14||^13|^5||^2|^14|^13|^5</div>
+      <input type="text" id="answerInput" placeholder="Enter your answer (plain)..." autocomplete="off">
+      <button class="action" onclick="checkAnswer()">Submit</button>
+      <div id="feedback"></div>
+    </div>
+  </div>
+
+  <div id="converterSection" class="section">
+    <div class="terminal">
+      <h3>Text to CODEX Converter</h3>
+      <input type="text" id="textInput" placeholder="Enter text to convert..." autocomplete="off">
+
+      <h3>CODEX Output</h3>
+      <textarea id="outputBox" readonly autocomplete="off"></textarea>
+
+      <h3>CODEX to Text Decoder</h3>
+      <input type="text" id="codeInput" placeholder="Paste CODEX here to decode..." autocomplete="off">
+
+      <h3>Decoded Output</h3>
+      <textarea id="decodedOutput" readonly autocomplete="off"></textarea>
+    </div>
+  </div>
+
+<footer class="site-footer">
+  <button class="back-btn" onclick="window.location.href='../../index.html'">
+    ♡ Back to Home
+  </button>
+</footer>
+
+  <script>
+    const puzzles = [
+      { code: '^9|^14|^6|^14||^20|^15|^6|^19|^3||^14|^23|^14||^13|^5||^2|^14|^13|^5', answer: 'AGE' },
+      { code: '^19|^14|^13|^5|^20|^9|^13|^5|^19||^8|^1|^22|^5||^12|^9|^6|^5||^2|^21|^20||^3|^1|^14|^20||^2|^5||^19|^5|^5|^14', answer: 'AIR' },
+      { code: '^3|^1|^14||^25|^14|^21||^8|^5|^1|^18||^13|^5||^2|^21|^20||^14|^14|^20||^19|^5|^5||^13|^5', answer: 'VOICE' },
+      { code: '^2|^21|^20||^4|^15|^14|^20||^5|^1|^20||^13|^5', answer: 'TONGUE' },
+      { code: '^14|^15||^19|^8|^1|^4|^15|^23||^2|^21|^20||^3|^1|^14||^2|^18|^5|^1|^2||^25|^15|^21', answer: 'LIGHT' }
+    ];
+    let current = 0;
+
+    function checkAnswer() {
+      const input = document.getElementById('answerInput').value.trim().toUpperCase();
+      const feedback = document.getElementById('feedback');
+
+      if (current >= puzzles.length) return;
+
+      if (input === puzzles[current].answer) {
+        if (current < puzzles.length - 1) {
+          feedback.innerHTML = '<div class="correct">✔ Correct! Moving to next puzzle...</div>';
+          setTimeout(() => {
+            current++;
+            document.getElementById('question').innerText = puzzles[current].code;
+            document.getElementById('puzzleNum').innerText = `PUZZLE ${current + 1}/5`;
+            feedback.innerHTML = '';
+            document.getElementById('answerInput').value = '';
+          }, 1500);
+        } else {
+          feedback.innerHTML = '<div class="correct">✔ Correct!</div>';
+          document.getElementById('question').innerText = '🎉 You completed all puzzles!';
+          document.getElementById('puzzleNum').innerText = '';
+          document.getElementById('answerInput').style.display = 'none';
+        }
+      } else {
+        feedback.innerHTML = '<div class="incorrect">✘ Try again.</div>';
+      }
+    }
+
+    const letterMap = {
+      '.': '||', 
+      ' ': '|', 
+      '!': '¡', 
+      '?': '¿', 
+      ':': '::', 
+      ';': ';;', 
+      '"': '<>', 
+      '=': '~',
+      '#': '#', 
+      '(': '[', 
+      ')': ']', 
+      '-': '--', 
+      '+': '+', 
+      '*': '*', 
+      '/': '/', 
+      ',': ',',
+      '@': '@',
+      '&': 'n', 
+      '%': '%%', 
+      '$': '$$', 
+      '<': '<<', 
+      '>': '>>', 
+      '_': '__', 
+      '0': 'θ', 
+      "'": "'",
+      '1': '♠', 
+      '2': '♥', 
+      '3': '♦', 
+      '4': '♣', 
+      '5': '⁘', 
+      '6': '♤', 
+      '7': '♡', 
+      '8': '♢', 
+      '9': '♙',
+      '|': ' ',
+      'A': '0',
+      'B': '1',
+      'C': '2',
+      'D': '3',
+      'E': '4',
+      'F': '5',
+      'G': '6',
+      'H': '7',
+      'I': '8',
+      'J': '9',
+      'K': '10',
+      'L': '11',
+      'M': '12',
+      'N': '13',
+      'O': '14',
+      'P': '15',
+      'Q': '16',
+      'R': '17',
+      'S': '18',
+      'T': '19',
+      'U': '20',
+      'V': '21',
+      'W': '22',
+      'X': '23',
+      'Y': '24',
+      'Z': '25',
+      'a': '0',
+      'b': '1',
+      'c': '2',
+      'd': '3',
+      'e': '4',
+      'f': '5',
+      'g': '6',
+      'h': '7',
+      'i': '8',
+      'j': '9',
+      'k': '10',
+      'l': '11',
+      'm': '12',
+      'n': '13',
+      'o': '14',
+      'p': '15',
+      'q': '16',
+      'r': '17',
+      's': '18',
+      't': '19',
+      'u': '20',
+      'v': '21',
+      'w': '22',
+      'x': '23',
+      'y': '24',
+      'z': '25',
+      '@': '@@',
+      '\n': '∫'
+    };
+
+    function convertToCode() {
+      const text = document.getElementById('textInput').value;
+      const out = [];
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (/[A-Z]/.test(ch)) out.push('^' + (ch.charCodeAt(0) - 65));
+        else if (/[a-z]/.test(ch)) out.push('⌄' + (ch.toUpperCase().charCodeAt(0) - 65));
+        else if (letterMap[ch]) out.push(letterMap[ch]);
+        else out.push(ch);
+        if (i < text.length - 1 && ![' ', '.', ',', '!', '?'].includes(text[i + 1])) out.push('|');
+      }
+
+      document.getElementById('outputBox').value = text.trim() === '' ? '' : out.join('');
+    }
+
+    function decodeCode() {
+      const input = document.getElementById('codeInput').value;
+      if (input.trim() === '') {
+        document.getElementById('decodedOutput').value = '';
+        return;
+      }
+
+      const reverseMap = {
+        '||': '.', 
+        '|': ' ', 
+        '¡': '!', 
+        '¿': '?', 
+        '::': ':', 
+        ';;': ';', 
+        '<>': '"',
+        '~': '=', 
+        '#': '##', 
+        '[': '(', 
+        ']': ')', 
+        '--': '-', 
+        '+': '+', 
+        '*': '*', 
+        '/': '/', 
+        '@': '@@',
+        'n': '&', 
+        '%%': '%', 
+        '$$': '$', 
+        '##': '#', 
+        '<<': '<', 
+        '>>': '>', 
+        '__': '_', 
+        'θ': '0',
+        '♠': '1', 
+        '♥': '2', 
+        '♦': '3', 
+        '♣': '4', 
+        '⁘': '5', 
+        '♤': '6', 
+        '♡': '7', 
+        '♢': '8', 
+        '♙': '9', 
+        "'": "'",
+        ',': ',',
+        'A': '0',
+        'B': '1',
+        'C': '2',
+        'D': '3',
+        'E': '4',
+        'F': '5',
+        'G': '6',
+        'H': '7',
+        'I': '8',
+        'J': '9',
+        'K': '10',
+        'L': '11',
+        'M': '12',
+        'N': '13',
+        'O': '14',
+        'P': '15',
+        'Q': '16',
+        'R': '17',
+        'S': '18',
+        'T': '19',
+        'U': '20',
+        'V': '21',
+        'W': '22',
+        'X': '23',
+        'Y': '24',
+        'Z': '25',
+        'a': '0',
+        'b': '1',
+        'c': '2',
+        'd': '3',
+        'e': '4',
+        'f': '5',
+        'g': '6',
+        'h': '7',
+        'i': '8',
+        'j': '9',
+        'k': '10',
+        'l': '11',
+        'm': '12',
+        'n': '13',
+        'o': '14',
+        'p': '15',
+        'q': '16',
+        'r': '17',
+        's': '18',
+        't': '19',
+        'u': '20',
+        'v': '21',
+        'w': '22',
+        'x': '23',
+        'y': '24',
+        'z': '25',
+        '∫': '\n',
+      };
+
+      const segments = input.split('||');
+      let result = [];
+
+      for (const word of segments) {
+        const letters = word.split('|').filter(Boolean);
+        let decoded = '';
+        for (let code of letters) {
+          if (code.startsWith('^')) decoded += String.fromCharCode(65 + parseInt(code.slice(1)));
+          else if (code.startsWith('⌄')) decoded += String.fromCharCode(97 + parseInt(code.slice(1)));
+          else if (reverseMap.hasOwnProperty(code)) decoded += reverseMap[code];
+          else decoded += code;
+        }
+        result.push(decoded);
+      }
+
+      document.getElementById('decodedOutput').value = result.join(' ');
+    }
+
+    document.getElementById("textInput").addEventListener("input", convertToCode);
+    document.getElementById("codeInput").addEventListener("input", decodeCode);
+    document.getElementById("textInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") convertToCode();
+    });
+    document.getElementById("answerInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") checkAnswer();
+    });
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    window.onload = () => {
+      document.getElementById('textInput').value = '';
+      document.getElementById('codeInput').value = '';
+      document.getElementById('outputBox').value = '';
+      document.getElementById('answerInput').value = '';
+      document.getElementById('feedback').innerHTML = '';
+      document.getElementById('decodedOutput').value = '';
+    };
+  </script>
+</body>
+</html>
