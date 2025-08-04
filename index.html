@@ -28,6 +28,10 @@
       height: 100%;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       display: flex;
       flex-direction: column;
@@ -165,14 +169,13 @@
     }
 
     .typed {
-      font-size: 1.3rem; /* Change to your preferred size */ 
       font-weight: 1rem; /* optional, if you want it bolder */ 
       align-items: left;
       color:#ef87aa
     }
 
     .typed-cursor {
-      font-size: 2rem; /* match your .typed size */
+      font-size: 3.5rem; /* match your .typed size */
       color: #ef87aa; /* match your theme color */
       animation: blink 0.7s infinite;
     }
@@ -210,6 +213,7 @@
     #offline-toast.show {
       opacity: 1;
     }
+
   </style>
 </head>
 <body>
@@ -217,7 +221,7 @@
   <div id="offline-toast">“Signal lost. But memories remain.”</div>
 
   <header>
-    <h1>404.P03M.3X3</h1>
+    <h1 style="font-size: 1.3rem;">404.P03M.3X3</h1>
     <nav>
       <a onclick="showSection('home')">Home ♡</a>
       <div class="dropdown">
@@ -325,14 +329,621 @@
 
   <section id="home" class="active">
   <p>
-    <span class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
+    <span style="font-size: 2.8rem" class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
   </p>
   </section>
-  <section id="poem-index"><h2>Poetry Index</h2><p>Coming soon...</p></section>
-  <section id="allpoems"><h2>All Poems</h2><p>Coming soon...</p></section>
+  <section id="poem-index"><h2>All Poems</h2><p>
+    <a style="background-color: #000;">1. Telescopic Love</a><br>
+    <a style="background-color: #000;">2. I Want That Someone</a><br>
+    <a style="background-color: #000;">3. Mi Culo Alto</a><br>
+    <a style="background-color: #000;">4. The Street He Never Glanced</a><br>
+    <a style="background-color: #000;">5. Cold Coffee and Confessions</a><br>
+    <a style="background-color: #000;">6. The Rim of Your Cup</a><br>
+    <a style="background-color: #000;">7. He Never Knew the Recipe</a><br>
+    <a style="background-color: #000;">8. September</a><br>
+    <a style="background-color: #000;">9. You Wouldn’t Know It By Looking at Her</a><br>
+    <a style="background-color: #000;">10. I Noticed Her Anyway</a><br>
+    <a style="background-color: #000;">11. You’d Know If You Knew Her</a><br>
+  </p></section>
+
+<section id="allpoems"><h2>All Poems</h2>
+    <div id="poem1" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">Telescopic Love</h3>
+    <p style="white-space: pre-line; line-height: 1.2;">
+Admiring him from a distance,
+Stealing a glance or two,
+Seems enough for the day,
+Keeping my small (tiny) heart content,
+A smile on his face makes mine magically appear,
+Out of nowhere, just like Houdini,
+He has my attention and love,
+Even if it is not promised to last long,
+Even if he doesn't know it,
+I'm happy he's happy,
+This shall be with me,
+Until I make myself worthy of his time and love,
+Oh! When my time comes, I will not hesitate,
+But all I can do right now,
+Is to admire him from a distance,
+For how long can something hurt you [again and again]?
+As long as you love it with all your heart,
+But never be able to hold close to you.
+<em style="color:#f5427e;">Those accidental touches,
+Makes me wish those were longer</em>
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+  <div id="poem2" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">I Want That Someone</h3>
+    <p style="white-space: pre-line;">
+Who do you look for in a crowd?
+To share your drinks, kisses and nights with,
+To lay your head, on their lap after a long day,
+Sweaty bodies, sore muscles, smiling through it all,
+Someone who knows you in and out,
+Knows how to tempt fate by teasing you with just a touch,
+Testing your control and patience at a party, 
+While they sway their hips to music you both love,
+Holding them close until the rest of the world is nothing but a blur,
+Knowing that you would go crazy over them as the days pass,
+Increasing love, lust and affection for them,
+Being loved back in ways you could never imagine, 
+All that love, just for you, all yours.
+<em style="color:#f5427e;">I want that someone</em>
+
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem3" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">Mi Culo Alto</h3>
+    <p style="white-space: pre-line;">
+My heart says shoot your shot,
+But I don't, I like the way we are right now,
+I'm happy with the way I glance at you,
+My gaze lingering on your face, 
+With a big fat smile plastered like a tattoo,
+My eyes, they look at you, like you're mine, 
+Mine to hug, mine to kiss and mine to hold,
+But you are not mine, at least not yet, 
+I hope for it to happen one day, 
+With no heart of mine stopping me,
+Adorning you with kisses,
+Poems dedicated to you,
+Written for you, each word uttering your name,
+Your brown eyes, something I can stare into for hours with no rest,
+Simply because I adore you with all I have,
+Your fingers in my open hair, so wild and so rough,
+Find your girl before I steal you off the market,
+'Cause, once you're mine, you're mine alone,
+Proudly telling the world, "he's mine!",
+There's a beautiful echo in those words, 
+Pride and love in every letter,
+Burning desire to let you write your poems,
+On my body with that witty tongue of yours,
+Lining every curve and stroke perfectly,
+Dipping the brush in the watery ink,
+Deep within the bottle to get every single drop,
+Before bringing it back to trace and shape,
+Ending your piece with a dot of a <strong>kiss.</strong>
+
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+  <div id="poem4" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">The Street He Never Glanced</h3>
+    <h4 style="color:#f5427e; font-size:1rem;">and yet she waited there, every day.</h4>
+    <p style="white-space: pre-line;">
+She didn't just tell a story,
+She left her teeth marks on reality,
+She left her eyes in his memory,
+Her hugs in his embrace,
+
+Her smile stayed in the space between his jokes,
+Even if he never looked long enough to see.
+She wasn’t loud about it
+Just present. Soft. Watching.
+
+She noticed things
+He didn’t know he revealed.
+Like how he pulled at his sleeves when he was nervous,
+Or how he paused before speaking hard truths.
+
+She’d walk a few steps behind,
+So he’d never feel followed.
+Always offering help
+Before he even thought to ask
+Because she knew he wouldn’t.
+
+She memorized the exact sound
+Of his half-laugh.
+And saved his favorite memes
+Without ever sending them.
+
+She never asked for space in his world,
+But carved out corners of her own
+Just in case he ever visited.
+
+She wonders
+If he remembers the way she looked at him
+Not with expectation,
+But like he was a sunrise
+She couldn’t interrupt.
+
+Did he feel her fingers
+When they brushed his in a group photo?
+Did he carry her laugh
+In the quiet parts of his day?
+
+She doesn't want to be unforgettable.
+Just remembered, maybe
+In the way he likes his coffee
+Or the way she always knew when to go quiet.
+
+She never needed to be his home.
+Just a street he once walked
+And paused
+Because something there felt kind.
+
+She doesn’t know if she mattered.
+If the softness she left
+Ever sank into his skin.
+If her eyes still live in a corner of his memory,
+Or if she vanished the moment she turned away.
+
+But she loved him.
+From a distance.
+Carefully.
+Deliberately.
+And maybe, just maybe
+That was enough to leave a mark.
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem5" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">Cold Coffee and Confessions</h3>
+    <h4 style="color:#f5427e; font-size:1rem;">Because the coffee stayed unshared, grew cold with time...</h4>
+    <p style="white-space: pre-line;">
+i’ll still be h<strong>I</strong>s even if he walks away,
+there’s no way to go back from a guy like him, the one and only.
+my sun and the moon,
+smile so warm like sun<strong>L</strong>ight,
+lighting up my world in the dark like moonlight,
+it’s july already,
+and s<strong>O</strong>mehow, i still haven’t asked you out for a coffee,
+maybe it’s too soon to cross that line,
+or maybe i’m just scared you’ll say no,
+but e<strong>V</strong>ery late-night thought pulls me closer,
+every sunrise makes me wish i’d tried,
+because you’re the quiet in my chaos,
+the comfort i’ve n<strong>E</strong>ver known,
+you’re the laugh i replay when nights are cold,
+the dream i dare not speak aloud,
+you’re the reason songs sound sweeter,
+the pause in time when you look my wa<strong>Y</strong>,
+your name is the melody i hum unconsciously,
+your presence makes every ordinary day feel new,
+i w<strong>O</strong>nder if you see it in my eyes,
+how every word i say is a careful dance,
+how yo<strong>U</strong>r voice lingers long after you’re gone,
+if time’s slipping by this fast,
+then maybe it’s time i finally Say it  would you?,
+would you share a coffee and a quiet m<strong>O</strong>ment,
+and Maybe a piece of my heart, too?
+because loving you quietly is no longer eno<strong>U</strong>gh, 
+and i mean it so mu<strong>C</strong>h  my <strong>H</strong>eart chose you
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem6" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">The Rim of Your Cup</h3>
+    <h4 style="color:#f5427e; font-size:1rem;">Because the coffee grew cold, and its scent outlasted us.</h4>
+    <p style="white-space: pre-line;">
+It was never about the coffee,
+But the warmth of shared silences,
+The way our hands almost touched,
+Over steaming mugs and unspoken words.
+
+In that little café,
+Time felt like a gentle pause,
+A breath held between us,
+As we navigated the spaces,
+Where our thoughts intertwined.
+
+I wanted to tell you
+About the dreams I tucked away,
+Like sugar packets in my bag,
+Sweet and unassuming,
+Waiting for the right moment to spill.
+
+But the words got lost
+In the froth of our conversations,
+Drowned in laughter and the clinking,
+Of cups that held our secrets,
+Like fragile porcelain.
+
+So here’s my confession,
+I loved you in the quiet moments,
+In the way you stirred your coffee
+With a distant look in your eyes,
+As if you were searching for something,
+Just beyond the rim of your cup.
+
+And though we never crossed that line,
+I hope you felt it too...
+The unspoken bond,
+That lingered in the air,
+Like the rich aroma of coffee,
+Long after the last sip.
+
+Maybe one day,
+We’ll find ourselves back there,
+In that cozy corner,
+With the world outside fading away,
+And the courage to say,
+All the things we left unsaid.
+    </p>
+  </div>   
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem7" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">He Never Knew the Recipe</h3>
+    <p style="white-space: pre-line;">
+I ache for his love the way pasta absorbs salt
+not because it craves it,
+but because something softens
+when the water is just warm enough.
+
+He moves with that quiet, athletic certainty
+shoulders broad with storms he never speaks of,
+eyes the color of autumn bark, steeped in thought.
+
+He doesn’t ask for attention,
+he just breathes,
+and the whole room listens.
+
+He drinks his coffee black,
+as if bitterness is a language only he understands,
+No sugar, no cream,
+just bold, honest intensity,
+the kind that makes you want to ask questions
+just to hear how the answers sound in his voice.
+
+And god, the way he speaks
+slow, deliberate,
+like knowledge is something sacred,
+and every word is a prayer,
+each sentence is a door he’s letting you walk through,
+if you're patient enough to wait for the key.
+
+I burn dinner sometimes,
+not because I forget,
+but because I get lost
+watching how he moves without needing permission.
+
+How he exists like he’s carved from certainty,
+and silence...
+I keep making too much pasta,
+Maybe because some small, foolish part of me,
+hopes he’ll sit across from me one evening,
+unwind enough to stay.
+
+To teach me not just facts,
+but the rhythm of his world
+how he sees it, how he thinks,
+what he holds sacred.
+
+I want to learn everything from him.
+Not because I’m empty,
+but because when he explains things,
+they feel like secrets being handed to me gently,
+like knowledge that remembers your name.
+
+He doesn’t talk about love.
+I don’t ask.
+But I see it maybe
+in the way he passes the salt
+without needing to be told.
+
+In how he remembers how I like my food,
+even if he never eats with me.
+I don’t know if he feels the same,
+but I hope...
+somewhere between the boiling pot and my quiet hands,
+between the caffeine in his cup and the warmth in my gaze,
+he senses it.
+
+That I would offer everything.
+That this isn’t just about dinner.
+That this is love,
+served quietly,
+seasoned with hope,
+waiting...
+for him to taste.
+    </p>
+  </div>    
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+<div id="poem8" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">September</h3>
+    <p style="white-space: pre-line;">
+September, if I had to call you something,
+I'd call you the month of calmness,
+Fresh starts and exploring new charts,
+Composure and home to the reserved,
+The feeling of hugs in your autumn falls,
+The soft browns and beiges in every corner,
+Becoming your eyes and ears,
+Something to lean on, fall asleep like there's no tomorrow.
+
+You’re the month that feels like a warm hug,
+If seasons were described in rain,
+Summer's your drizzle,
+And you're his hurricane.
+You're the warmth between shifting winds,
+The last soft kiss before the world gets cold.
+The kind of quiet that makes you miss someone
+you haven’t even said goodbye to.
+I think if love had a weather pattern,
+it would look a lot like you
+gentle at first,
+but impossible not to notice when it leaves.
+
+You’re the month that makes me want to write,
+To spill my heart onto paper,
+To capture the way you make me feel
+In every word, every line, every verse.
+You’re the calm before the storm,
+The promise of something beautiful,
+That lingers in the air,
+Like the scent of fallen leaves
+And the whisper of a breeze.
+
+You’re the month that reminds me
+That even in the chaos of life,
+There’s beauty in the stillness,
+A chance to breathe, to reflect,
+To find solace in the changing leaves.
+You’re the month that holds my heart,
+A gentle reminder that love,
+Like the seasons, is ever-changing,
+But always, always beautiful.
+
+<em style="color:#f5427e;">A quiet goodbye we never gave,
+But always carried...</em>
+        </p>
+    </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem9" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">You Wouldn’t Know It By Looking at Her</h3>
+    <p style="white-space: pre-line;">
+You wouldn’t know it by looking at her
+how many unfinished thoughts she carries like splinters
+beneath the surface of a conversation.
+
+She listens the way some people mumble,
+quietly,
+desperately,
+never expecting to be heard back.
+
+She makes room where there is none,
+Fills silence without speaking,
+Her presence hums,
+in the corners of rooms,
+where no one else looks.
+
+She has never asked for much,
+She has learned not to,
+Need is a dangerous thing,
+when you've had to make your own warmth,
+in the middle of winter,
+with nothing but memory,
+and a soft voice you forgot was yours.
+
+She doesn’t collapse anymore.
+She pauses.
+She adjusts.
+She folds herself smaller
+and calls it survival.
+Calls it grace.
+Calls it fine.
+
+She is the kind of tired
+that cannot be undone with rest
+the kind built from being the constant
+in everyone else’s storm
+and never being asked
+how much it cost her
+to stay that still
+for that long.
+
+She leaves pieces of herself in small places
+a joke she knows will land,
+a look that says “go on, I’m listening,”
+a pause before “it’s okay, I'm okay”
+when it isn’t.
+
+And when she says she’s fine,
+you believe her.
+Because you want to.
+Because the alternative
+is realizing
+no one ever stopped long enough
+to see how much she’s carrying
+just to make you feel lighter.
+
+You wouldn’t know it by looking at her.
+But sometimes,
+she doesn’t speak
+because there’s nothing left
+that hasn’t already been given away.
+   </p>
+    </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+
+<div id="poem10" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">I Noticed Her Anyway</h3>
+    <h4 style="color:#f5427e; font-size:1rem;">the girl who always paused.</h4>
+    <p style="white-space: pre-line;">
+She wasn’t loud.
+She didn’t ask for attention.
+In fact, I almost missed her
+tucked between louder laughter
+and people who knew how to take up space,
+without asking permission.
+But something about her made me stop.
+
+It wasn’t what she said
+it was the way she said less.
+The way her silence wasn’t empty.
+It was listening.
+It was offering.
+It was holding stories
+she didn’t think anyone would stay long enough to hear.
+
+She had that look in her eye
+the one people carry
+after they’ve been interrupted too many times,
+and learned to finish conversations in their head
+instead of out loud.
+
+She didn’t rush her words.
+She measured them.
+Not because she was unsure,
+but because she understood
+what it meant
+to be careful with truth.
+
+She sat like someone who had held too much
+and didn’t want to spill it on anyone else.
+Like someone who made herself smaller
+so no one else had to be uncomfortable.
+And yet,
+there was something in her pause
+that felt louder than the whole room.
+
+Like she was always almost saying
+the thing that would change everything,
+but only if you cared enough,
+to ask again,
+after she said “it’s fine.”
+I don’t know her story.
+I just know
+I noticed her anyway.
+The way her hands moved when she talked,
+as if translating feelings
+into air.
+
+The way her voice softened
+at the exact moment
+the world got too sharp.
+The girl who always paused
+not because she didn’t know what to say,
+but because she was trying to decide
+if anyone in the room
+would be kind enough
+to hear it all.
+    </p>
+  </div>
+
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+<div id="poem11" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
+    <h3 style="color:#c91450; font-size:1.7rem;">You’d Know If You Knew Her</h3>
+    <p style="white-space: pre-line;">
+She laughs now.
+Loud, lopsided,
+the kind of laugh that doesn’t ask permission
+before crashing into a room.
+Not everyone gets the joke
+but that’s the thing.
+
+She doesn’t care if they do.
+She’s not performing anymore.
+She tells stories that make no sense,
+jokes that trip over themselves halfway through
+and grins like it’s the funniest thing in the world
+because it is.
+To her.
+
+And to the ones who know her best,
+who’ve learned to connect the dots between the chaos
+and know exactly where her punchline is hiding.
+She still says,
+"I know you know me, you'll understand why I said that."
+And if you don’t?
+That’s fine.
+
+She’s no longer wasting breath on people
+who need her to translate her joy
+into something smaller.
+She doesn't flinch anymore
+when the silence in a room gets heavy.
+
+She’s learned how to breathe through it
+without anyone noticing.
+How to pull herself back
+without a sound.
+
+How to stop the unraveling
+before it begins,
+like some kind of private magic
+she taught herself
+on nights she never talks about.
+
+She’s smiling in photos now.
+Really smiling.
+But only the ones who’ve seen her up close
+the ones who remember how her lips used to curl
+just enough to pretend...
+they’re the ones who know the difference.
+
+She no longer apologizes for being too much,
+or not enough,
+or whatever version of herself someone once asked her to be.
+She is wildly, quietly free.
+She cries less.
+Not because she feels less.
+
+But because she’s stopped breaking
+in places no one bothers to clean up.
+And when the world tightens its grip,
+when the room gets too loud
+and the air too thin
+she has people who know how to look at her
+without saying a word,
+and still remind her
+that she’s not alone in it anymore.
+
+She is the girl who once paused.
+And now
+she speaks in laughter
+and doesn’t care if you’re keeping up.
+    </p>
+  </div>
+
+<hr style="border: none; height: 1px; background: #f5427e; margin: 2rem 0; opacity: 0.4;" />
+  </section>
+
   <section id="blog-index"><h2>Blog Index</h2><p>Coming soon...</p></section>
+
   <section id="allblogs"><h2>All Blogs</h2><p>Coming soon...</p></section>
-  <section id="aboutme"><h2>About Me</h2><p>Student dev, chaos crafter, glitch poet. I write and build stories.</p></section>
+
+  <section id="aboutme"><h2>About Me</h2><p>Student dev, chaos crafter, glitch poet. I write and 404. stories.</p></section>
+
 
   <footer>
     <p><strong>&copy; 2025 Laasya — All rights reserved.</strong></p>
@@ -343,11 +954,21 @@
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
   <script>
     function showSection(id) {
-      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      const el = document.getElementById(id);
-      if (el) el.classList.add('active');
-      document.querySelector('.container').classList.toggle('dimmed', id !== 'home');
+  // Hide all sections except the one being shown
+  document.querySelectorAll('section').forEach(s => {
+    if (s.id === id) {
+      s.classList.add('active');
+    } else {
+      s.classList.remove('active');
     }
+  });
+
+  document.querySelector('.container').classList.toggle('dimmed', id !== 'home');
+}
+    // Initialize the first section as active
+    showSection('home');
+    
+    // Typed.js initialization for the typed element    
 document.addEventListener('DOMContentLoaded', () => {
     const typedElement = document.querySelector('.typed');
     if (typedElement) {
@@ -380,5 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('offline-toast').classList.remove('show');
     });
   </script>
+
+  
 </body>
 </html>
