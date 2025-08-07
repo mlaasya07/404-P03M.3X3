@@ -33,15 +33,15 @@ Student dev and glitch poet.
 > “In the end, we are all just echoes of our own stories.”
 
 ```plaintext
-## 🐣 P.S. Cassidy...
+🐣 P.S. Cassidy...
 
 The map in blue doesn’t quite lead the way.  
 But sometimes, poetry lingers in the corners.  
 A flicker. A name. A strange code humming just below the fold.
 
-And if you find **P03M**,  
+And if you find P03M,  
 you just might stumble into a world where language wears a mask.
-
-🕳️ The portal awaits:  
-[https://404-p03m-3x3.netlify.app/](https://404-p03m-3x3.netlify.app/)
 ```
+🕳️ The portal awaits:  
+[website-link/](https://404-p03m-3x3.netlify.app/)
+
