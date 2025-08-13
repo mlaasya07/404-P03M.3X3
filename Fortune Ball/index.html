@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="heart.png" type="image/png" />
+  <title>Fortune Ball ✨</title>
+  <meta name="description" content="A playful, giftable digital fortune ball. Tap to shake and reveal a message." />
+  <style>
+    :root{
+      --bg:#0f0f14;
+      --ink:#f7f8ff;
+      --muted:#aeb6c8;
+      --ball:#0b1224;     /* outer shell */
+      --gloss:#1a2340;    /* shell highlight */
+      --ring:#0c1630;     /* rim */
+      --screen:#e6f0ff;   /* inner display */
+      --screen-text:#1f2937;
+      --accent:#8ab6ff;   /* glow accent */
+      --btn:#131a2c;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink);
+      background: radial-gradient(1000px 680px at 70% -10%, #1f2740 0%, var(--bg) 46%), var(--bg);
+      font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      display:grid; place-items:center;
+    }
+    .wrap{width:min(900px,92vw); text-align:center}
+    h1{font-size:1.4rem; font-weight:700; margin:6px 0 14px 0; letter-spacing:.3px}
+    .sub{color:var(--muted); font-size:.95rem; margin-bottom:14px}
+
+    /* Ball */
+    .stage{position:relative; display:grid; place-items:center; padding:24px}
+
+    .ball{ position:relative; width:min(72vw,360px); aspect-ratio:1/1; border-radius:50%; cursor:pointer; user-select:none; 
+      background: radial-gradient(180px 180px at 70% 30%, var(--gloss) 0%, var(--ball) 62%),
+                  radial-gradient(200px 140px at 50% 120%, rgba(255,255,255,.12), transparent 70%),
+                  var(--ball);
+      box-shadow:
+        0 50px 120px rgba(0,0,0,.55),
+        inset 0 0 0 10px var(--ring),
+        inset 0 -24px 60px rgba(0,0,0,.6),
+        inset 0 32px 60px rgba(255,255,255,.06);
+      transition: transform .2s ease-out, filter .2s ease-out;
+    }
+    .ball:hover{ transform: translateY(-2px); filter: drop-shadow(0px 2px 10px #8ab6ff); }
+
+    .ball:before{ /* soft outer glow */
+      content:""; position:absolute; inset:-18px; border-radius:50%;
+      background: radial-gradient(60% 60% at 50% 35%, rgba(138,182,255,.18), transparent 70%);
+      filter: blur(14px); opacity:.8; pointer-events:none;
+    }
+
+    /* Triangle window */
+    .answer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 12px;
+  text-align: center;
+  color: var(--screen-text);
+  font-weight: 700;
+  font-size: clamp(.78rem, 1.8vw, 1rem);
+  line-height: 1.2;
+  letter-spacing: .2px;
+  opacity: .95;
+  color: #8ab6ff;
+}
+    .answer{ padding:10px 12px; text-align:center; color:var(--screen-text); font-weight:700; 
+      font-size:clamp(.78rem, 1.8vw, 1rem); line-height:1.2; letter-spacing:.2px; opacity:.95; color: #8ab6ff; }
+
+    /* Shake animation */
+    @keyframes shake {
+      0%,100% { transform: translateX(0) rotate(0); }
+      20% { transform: translateX(-8px) rotate(-1.5deg); }
+      40% { transform: translateX(8px) rotate(1.5deg); }
+      60% { transform: translateX(-6px) rotate(-1deg); }
+      80% { transform: translateX(6px) rotate(1deg); }
+    }
+    .shake { animation: shake .55s ease-in-out; }
+
+    /* Controls */
+    .hint{color:var(--muted); margin-top:10px}
+    .actions{ display:flex; justify-content:center; gap:10px; margin-top:14px }
+    button{ background:var(--btn); color:var(--ink); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:650 }
+    button:hover{ background:#1b2238 }
+
+    .footer{ color:var(--muted); margin-top:16px; font-size:.9rem }
+    footer{
+      margin-top:14px;
+      color: #8ab6ff;
+      font-size:1rem;
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+  </style>
+
+
+</head>
+<body>
+  <div class="wrap">
+    <h1>Fortune Ball ✨</h1>
+    <div class="sub">Tap to shake. Destiny (and a bit of RNG) will answer.</div>
+
+    <div class="stage">
+      <div class="ball" id="ball" role="button" aria-label="Shake the fortune ball" tabindex="0">
+<div class="ball" id="ball" role="button" aria-label="Shake the fortune ball" tabindex="0">
+  <div class="answer" id="answer">Ask a question, then tap.</div>
+</div>
+      </div>
+      <div class="hint">Click / tap the ball or press <b>Space</b></div>
+      <div class="actions">
+        <button id="again">Ask Again</button>
+        <button id="copy">Copy Answer</button>
+      </div>
+    </div>
+
+    <div class="footer">Totally unbiased. Absolutely scientific.</div>
+    <footer>
+    <p>Made with ❤️ by <a href="https://aboutme-laasya.netlify.app/" target="_blank" rel="noopener noreferrer" style="color: #8ab6ff; text-decoration: none;">Laasya</a></p> 
+    </footer>
+  </div>
+
+  <script>
+    // Preloaded fortunes (mix of classic 8-ball, wholesome, and flirty)
+    const messages = [
+      // Classic style
+      "It is certain.", "Without a doubt.", "You may rely on it.", "Most likely.", "Outlook good.",
+      "Signs point to yes.", "Reply hazy, try again.", "Ask again later.", "Better not tell you now.",
+      "Concentrate and ask again.", "Don't count on it.", "My reply is no.", "Very doubtful.",
+      // Sweet / wholesome
+      "Good things are brewing.", "Be kind to yourself today.", "You're closer than you think.",
+      "A tiny risk will pay off.", "Trust the process.", "Text them. Yes, that one.",
+      // Flirty / cute
+      "Chances improve with coffee together.", "Yes — preferably with you.", "Absolutely, cutie.",
+      "Ask them on a date already.", "Your smile says yes.", "Your heart voted yes.", "Plot twist: also yes.",
+      // Fun extras
+      "Error 200: Love OK.", "42.", "Stars align at 5pm.", "Try again after snacks.",
+      "Fortune offline. Please kiss to continue.", "Ship sails at dawn. Be on it.",
+    ];
+
+    const ball = document.getElementById('ball');
+    const answer = document.getElementById('answer');
+    const again = document.getElementById('again');
+    const copyBtn = document.getElementById('copy');
+
+    function randomMessage(){
+      return messages[Math.floor(Math.random()*messages.length)];
+    }
+
+    function shakeAndAnswer(){
+      ball.classList.remove('shake'); // restart animation if needed
+      // Force reflow to allow re-adding the class
+      void ball.offsetWidth;
+      ball.classList.add('shake');
+
+      // Delay the reveal to sync with shake
+      answer.style.opacity = 0;
+      setTimeout(()=>{
+        answer.textContent = randomMessage();
+        answer.style.opacity = 1;
+      }, 420);
+    }
+
+    function copyAnswer(){
+      const text = answer.textContent.trim();
+      if(!text) return;
+      navigator.clipboard?.writeText(text).then(()=>{
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=>copyBtn.textContent='Copy Answer', 1200);
+      }).catch(()=>{
+        // Fallback
+        alert(text);
+      });
+    }
+  
+    ball.addEventListener('click', shakeAndAnswer);
+    again.addEventListener('click', shakeAndAnswer);
+    copyBtn.addEventListener('click', copyAnswer);
+
+    // Keyboard support
+    ball.addEventListener('keydown', (e)=>{
+      if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); shakeAndAnswer(); }
+    });
+
+    // First focus for accessibility & vibe
+    setTimeout(()=>{ ball.focus(); }, 200);
+  </script>
+</body>
+</html>
