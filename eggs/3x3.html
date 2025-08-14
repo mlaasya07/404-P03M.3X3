@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="icon" href="favicon.png" type="image/png">
+<head>
+    <meta charset="UTF-8">
+    <title>Never Gonna Give You Up!</title>
+    <style>
+        body {
+            background: #222;
+            color: #c91450;
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            padding-top: 50px;
+        }
+        .rick-img {
+            width: 320px;
+            border-radius: 20px;
+            box-shadow: 0 0 100px #c91450;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #c91450;
+            color: #ffffff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #f5427e;
+            color: black;
+            transform: scale(1.3);
+        }
+
+        /* Mobile adjustments */
+        @media screen and (max-width: 600px) {
+            body {
+                padding-top: 30px;
+            }
+            .rick-img {
+                width: 100%;
+                max-width: 300px;
+            }
+            .btn {
+                width: 100%;
+                padding: 15px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>You've been rick-rolled!</h1>
+    <img class="rick-img" src="https://media.giphy.com/media/Vuw9m5wXviFIQ/giphy.gif" alt="Rick Astley dancing">
+    <p>Never gonna give you up, never gonna let you down...<br>
+    Never gonna run around and desert you!</p>
+    <button class="btn" onclick="window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ','_blank')">
+        DO NOT CLICK THIS!
+    </button>
+</body>
+</html>

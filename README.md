@@ -14,7 +14,7 @@
 
 - **Home** — Rotating phrases and ambient visuals
 - **Poetry** — Index and full poems (coming soon)
-- **Fun HUb** — Funny Excuse Generator and Fortune 8-Ball
+- **Fun Hub** — Funny Excuse Generator and Fortune 8-Ball
 - **AboutMe** — A brief self-portrait in motion
 
 ## 🧩 Technologies Used
