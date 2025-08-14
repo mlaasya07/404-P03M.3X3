@@ -169,6 +169,7 @@
     }
 
     .typed {
+      font-size: 2.8rem;
       font-weight: 1rem; /* optional, if you want it bolder */ 
       align-items: left;
       color:#ef87aa
@@ -214,6 +215,61 @@
       opacity: 1;
     }
 
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: row;
+        gap: 1rem;
+      }
+      nav a {
+        font-size: 1rem;
+      }
+      .poem {
+        padding: 1rem;
+        font-size: 0.95rem;
+      }
+      .cube-wrapper {
+        height: 40vh;
+      }
+      .typed-cursor {
+        font-size: 1.8rem; /* smaller cursor for tablets */
+      }
+      .typed
+      {
+        font-size: 1.5rem; /* smaller text for tablets */
+      }
+      footer {
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      nav {
+        flex-direction: row;
+        gap: 0.5rem;
+      }
+      nav a {
+        font-size: 0.9rem;
+      }
+      .poem {
+        font-size: 0.9rem;
+      }
+      .cube-wrapper {
+        height: 35vh;
+      }
+      .typed-cursor
+      {
+        font-size: 1.8rem; /* smaller cursor for mobile */
+      }
+      .typed
+      {
+        font-size: 1.2rem; /* smaller text for mobile */
+      }
+      footer {
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -329,7 +385,7 @@
 
   <section id="home" class="active">
   <p>
-    <span style="font-size: 2.8rem" class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
+    <span class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
   </p>
   </section>
   <section id="poem-index"><h2>All Poems</h2><p>
