@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi Countdown Timers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* === Global styles === */
+    body { 
+      font-family: system-ui, sans-serif; 
+      background: url('./1.jpg') no-repeat center center fixed; /* ← your image here */
+      background-size: cover;
+      color: #ef87aa; 
+      padding: 20px; 
+      line-height: 1.5;
+      user-select: none; /* makes text not selectable */
+      margin: 0;
+      min-height: 100vh;
+      backdrop-filter: blur(4px);
+    }
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5); /* adjust darkness */
+  z-index: -1; /* keeps it behind all content */
+}
+
+    h1 { 
+      margin-top: 0; 
+      text-align: center;
+      font-size: 2rem;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    }
+
+    /* === Input + Buttons === */
+    input, button { 
+      padding: 10px 14px; 
+      margin: 4px; 
+      border-radius: 8px; 
+      border: 3px solid #e4195d; 
+      background: #ef87aa;
+      color: #f3f3f3; 
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    button { 
+      cursor: pointer; 
+      transition: background 0.2s ease;
+    }
+
+    button:hover { 
+      background: #e4195d; 
+        color: #000000;
+    }
+
+    /* === Timer cards === */
+    .timer { 
+      background: #4f051e; 
+      padding: 14px; 
+      margin: 12px 0; 
+      border-radius: 12px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border: 1px solid #e4195d;
+      box-shadow: 0 0 12px #e4195d;
+    }
+
+    .label { 
+      font-weight: bold; 
+      font-size: 2.8rem;
+      color: #ffffff;
+    }
+
+    .actions button { 
+      margin-left: 6px; 
+      font-size: 0.85rem;
+    }
+
+    .done { 
+      color: #e4195d; 
+      font-weight: bold; 
+      text-shadow: 0 0 8px #ef87aa;
+    }
+    
+  </style>
+</head>
+<body>
+  <h1>⏳ My Timers</h1>
+
+  <div style="text-align:center; margin-bottom: 20px;">
+    <input id="label" type="text" placeholder="Timer name" />
+    <input id="time" type="datetime-local" />
+    <button id="addBtn">Add Timer</button>
+  </div>
+
+  <div id="timers"></div>
+
+<script>
+  const timersDiv = document.getElementById("timers");
+  let timers = JSON.parse(localStorage.getItem("timers") || "[]");
+
+  function save() {
+    localStorage.setItem("timers", JSON.stringify(timers));
+  }
+
+  function render() {
+    timersDiv.innerHTML = "";
+    timers.forEach((t, i) => {
+      const el = document.createElement("div");
+      el.className = "timer";
+
+      const label = document.createElement("span");
+      label.className = "label";
+
+      const remaining = formatRemaining(t.end);
+      if (remaining === "DONE!") {
+        label.innerHTML = `${t.name} → <span class="done">DONE!</span>`;
+      } else {
+        label.textContent = `${t.name} → ${remaining}`;
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const renameBtn = document.createElement("button");
+      renameBtn.textContent = "✏️ Rename";
+      renameBtn.onclick = () => {
+        const newName = prompt("New name:", t.name);
+        if (newName) {
+          timers[i].name = newName;
+          save(); render();
+        }
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "❌ Delete";
+      delBtn.onclick = () => {
+        timers.splice(i, 1);
+        save(); render();
+      };
+
+      actions.appendChild(renameBtn);
+      actions.appendChild(delBtn);
+
+      el.appendChild(label);
+      el.appendChild(actions);
+      timersDiv.appendChild(el);
+    });
+  }
+
+  function formatRemaining(end) {
+    const diff = new Date(end) - new Date();
+    if (diff <= 0) {
+      return "DONE!";
+    }
+    const s = Math.floor(diff / 1000) % 60;
+    const m = Math.floor(diff / 1000 / 60) % 60;
+    const h = Math.floor(diff / 1000 / 60 / 60) % 24;
+    const d = Math.floor(diff / 1000 / 60 / 60 / 24);
+    return `${d}d ${h}h ${m}m ${s}s`;
+  }
+
+  function tick() {
+    render();
+  }
+
+  document.getElementById("addBtn").onclick = () => {
+    const labelInput = document.getElementById("label");
+    const timeInput = document.getElementById("time");
+    const label = labelInput.value.trim();
+    const time = timeInput.value;
+
+    if (!label || !time) return alert("Enter a label and a valid time!");
+    timers.push({ name: label, end: time });
+    save(); render();
+
+    // 🔥 Reset inputs
+    labelInput.value = "";
+    timeInput.value = "";
+  };
+
+  // update timers every second
+  setInterval(tick, 1000);
+  render();
+</script>
+
+
+</body>
+</html>

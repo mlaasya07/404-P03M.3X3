@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Countdown Timers</title>
+  <link rel="icon" href="./favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* === Global styles === */
+    body {
+      font-family: "Roboto Mono", monospace;
+      background: url('./1.jpg') no-repeat center center fixed; /* ← your image here */
+      background-size: cover;
+      padding: 40px;
+      margin: 0;
+      color: #e4195d;
+      user-select: none; /* makes text not selectable */
+      min-height: 100vh;
+      backdrop-filter: blur(4px);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+
+    }
+
+    /* Input area */
+    .controls {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    input, button {
+      padding: 10px 14px;
+      margin: 4px;
+      border-radius: 6px;
+      border: 1px solid #e4195d;
+      font-family: "Helvetica Neue", sans-serif; /* input-only font */
+      font-size: 0.95rem;
+      background: #fff;
+    }
+
+    button {
+      background: #e4195d;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #ef87aa;
+      color: #111;
+      border-color: #e4195d;
+      border-radius: 3px;
+    }
+/* Timers grid */
+    #timers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(3, 1fr)); /* responsive */
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      justify-items: center; /* centers each timer */
+
+    }
+    /* === Timer Card (magazine sexy style) === */
+    .timer {
+      background: #fff;
+      border: 1px solid #111;
+      padding: 2rem;
+      margin: 1.5rem auto;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;        /* center each card in its cell */
+      box-shadow: 8px 8px 0 #111;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .timer:hover {
+      transform: translateY(-5px);
+      box-shadow: 12px 12px 0 #111;
+    }
+
+    .label {
+      font-size: 1.4rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      display: block;
+      text-transform: uppercase;
+    }
+
+    .time {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      line-height: 1;
+      display: block;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      font-size: inherit;
+      position: relative;
+      font-family: "Roboto Mono", monospace; /* actions follow global font */
+    }
+
+    .actions button::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 1px;
+      background: #111;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+
+    .actions button:hover::after {
+      transform: scaleX(1);
+    }
+
+    .done {
+      color: #111;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Timers</h1>
+
+  <div class="controls">
+    <input id="label" type="text" placeholder="Timer name" />
+    <input id="time" type="datetime-local" />
+    <button id="addBtn">Add Timer</button>
+  </div>
+
+  <div id="timers"></div>
+
+<script>
+  const timersDiv = document.getElementById("timers");
+  let timers = JSON.parse(localStorage.getItem("timers") || "[]");
+
+  function save() {
+    localStorage.setItem("timers", JSON.stringify(timers));
+  }
+
+function render() {
+  timersDiv.innerHTML = "";
+
+  // Sort timers: DONE first, then soonest deadline
+  const sorted = [...timers].sort((a, b) => {
+    const diffA = new Date(a.end) - new Date();
+    const diffB = new Date(b.end) - new Date();
+
+    // DONE timers go first
+    if (diffA <= 0 && diffB > 0) return -1;
+    if (diffB <= 0 && diffA > 0) return 1;
+
+    // Otherwise sort by soonest deadline
+    return new Date(a.end) - new Date(b.end);
+  });
+
+  sorted.forEach((t, i) => {
+    const el = document.createElement("div");
+    el.className = "timer";
+
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = t.name;
+
+    const time = document.createElement("span");
+    time.className = "time";
+
+    const remaining = formatRemaining(t.end);
+    time.innerHTML = remaining === "DONE!"
+      ? `<span class="done">DONE!</span>`
+      : remaining;
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const renameBtn = document.createElement("button");
+    renameBtn.textContent = "✏️ Rename";
+    renameBtn.onclick = () => {
+      const newName = prompt("New name:", t.name);
+      if (newName) {
+        t.name = newName;
+        save(); render();
+      }
+    };
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "❌ Delete";
+    delBtn.onclick = () => {
+      timers = timers.filter(x => x !== t);
+      save(); render();
+    };
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(delBtn);
+
+    el.appendChild(label);
+    el.appendChild(time);
+    el.appendChild(actions);
+
+    timersDiv.appendChild(el);
+  });
+}
+
+
+  function formatRemaining(end) {
+    const diff = new Date(end) - new Date();
+    if (diff <= 0) {
+      return "DONE!";
+    }
+    const s = Math.floor(diff / 1000) % 60;
+    const m = Math.floor(diff / 1000 / 60) % 60;
+    const h = Math.floor(diff / 1000 / 60 / 60) % 24;
+    const d = Math.floor(diff / 1000 / 60 / 60 / 24);
+    return `${d}d ${h}h ${m}m ${s}s`;
+  }
+
+  function tick() {
+    render();
+  }
+
+  document.getElementById("addBtn").onclick = () => {
+    const labelInput = document.getElementById("label");
+    const timeInput = document.getElementById("time");
+    const label = labelInput.value.trim();
+    const time = timeInput.value;
+
+    if (!label || !time) return alert("Enter a label and a valid time!");
+    timers.push({ name: label, end: time });
+    save(); render();
+
+    labelInput.value = "";
+    timeInput.value = "";
+  };
+
+  setInterval(tick, 1000);
+  render();
+</script>
+</body>
+</html>
