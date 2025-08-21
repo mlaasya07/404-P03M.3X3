@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turtle Spiral — HTML Canvas</title>
+  <style>
+    :root { --bg: #000; --fg: #c7f9ff; --accent: #B9314F; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .wrap { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    header { display: flex; gap: 14px; align-items: center; padding: 10px 12px; border-bottom: 1px solid #1f2937; position: sticky; top: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); }
+    header h1 { font-size: 14px; margin: 0 8px 0 0; font-weight: 600; color: var(--accent); letter-spacing: .4px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+    .control { display: inline-flex; align-items: center; gap: 8px; }
+    .control input[type="range"] { width: 140px; }
+    .btn { padding: 6px 10px; border: 1px solid #1f2937; background: #0b0f14; color: var(--fg); border-radius: 10px; cursor: pointer; }
+    .btn:hover { border-color: #334155; }
+    select, input[type="color"], input[type="number"], input[type="checkbox"] { background: #0b0f14; color: var(--fg); border: 1px solid #1f2937; border-radius: 8px; padding: 5px 8px; }
+    canvas { display: block; width: 100%; height: 100%; }
+    .hint { margin-left: auto; opacity: .7; }
+  </style>
+</head>
+<body>
+  <nav>
+  <div class="wrap">
+    <header>
+      <h1>🌀</h1>
+      <div class="controls">
+        <div class="control">
+          <label>Mode</label>
+          <select id="mode">
+            <option value="original">Original (turn = b°)</option>
+            <option value="fixed">Fixed Angle</option>
+          </select>
+        </div>
+        <div class="control" id="angleWrap" style="display:none">
+          <label>Angle</label>
+          <input id="angle" type="range" min="1" max="179" value="59" />
+          <span id="angleVal">59°</span>
+        </div>
+        <div class="control">
+          <label>Start b</label>
+          <input id="startB" type="number" min="10" max="2000" value="200" />
+        </div>
+        <div class="control">
+          <label>Stroke</label>
+          <input id="stroke" type="range" min="0.5" max="6" step="0.5" value="2" />
+        </div>
+        <div class="control">
+          <label>Color</label>
+          <select id="colorMode">
+            <option value="single">Single</option>
+            <option value="rainbow">Rainbow</option>
+            <option value="cycle">Cyan → Magenta cycle</option>
+          </select>
+          <input id="singleColor" type="color" value="#00ffff" />
+        </div>
+        <div class="control">
+          <label>Speed</label>
+          <input id="speed" type="range" min="1" max="20" value="8" />
+        </div>
+        <button class="btn" id="restart">Restart</button>
+        <button class="btn" id="savePNG">Save PNG</button>
+        <span class="hint">Tip: Resize window to re-center.</span>
+      </div>
+    </header>
+    </nav>
+    <canvas id="c"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    const qs = id => document.getElementById(id);
+    const ui = {
+      mode: qs('mode'), angle: qs('angle'), angleVal: qs('angleVal'), angleWrap: qs('angleWrap'),
+      startB: qs('startB'), stroke: qs('stroke'), colorMode: qs('colorMode'), singleColor: qs('singleColor'),
+      speed: qs('speed'), restart: qs('restart'), savePNG: qs('savePNG')
+    };
+
+    let state;
+
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(canvas.clientWidth * dpr);
+      canvas.height = Math.floor(canvas.clientHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing ops
+      reset(true);
+    }
+
+    function reset(skipClear = false) {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (!skipClear) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Start from center
+      const cx = w / 2, cy = h / 2;
+      const startB = Math.max(10, Math.min(2000, parseInt(ui.startB.value || 200, 10)));
+      const maxRadius = Math.min(w, h) * 0.48;
+      // scale step so the first few long steps fit comfortably
+      const scale = maxRadius / (startB * 3 * 1.15);
+      state = {
+        b: startB,
+        heading: 0,
+        x: cx,
+        y: cy,
+        cx, cy,
+        scale,
+        hue: 180, // cyan-ish
+        frame: 0
+      };
+      // fill bg
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0,0,canvas.width, canvas.height);
+      ctx.restore();
+    }
+
+    function stepOnce() {
+      const { cx, cy } = state;
+      const mode = ui.mode.value;
+      const fixedAngle = parseFloat(ui.angle.value);
+      const turns = mode === 'fixed' ? fixedAngle : state.b;
+      // Turn left by 'turns' degrees, then forward by b*3*scale
+      state.heading = (state.heading - turns) % 360; // canvas y+ down, so left is -
+      const dist = state.b * 3 * state.scale;
+      const rad = state.heading * Math.PI / 180;
+      const nx = state.x + Math.cos(rad) * dist;
+      const ny = state.y + Math.sin(rad) * dist;
+
+      // Stroke style
+      ctx.lineWidth = parseFloat(ui.stroke.value);
+      const cm = ui.colorMode.value;
+      if (cm === 'single') {
+        ctx.strokeStyle = ui.singleColor.value;
+      } else if (cm === 'rainbow') {
+        ctx.strokeStyle = `hsl(${(state.frame * 4) % 360} 100% 60%)`;
+      } else {
+        // cyan -> magenta cycle
+        const t = (Math.sin(state.frame * 0.05) + 1) / 2; // 0..1
+        const h = 180 * (1 - t) + 300 * t;
+        ctx.strokeStyle = `hsl(${h} 100% 65%)`;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(state.x, state.y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+
+      state.x = nx; state.y = ny; state.b -= 1; state.frame += 1;
+      return state.b > 0;
+    }
+
+    function tick() {
+      const stepsPerFrame = parseInt(ui.speed.value, 10);
+      for (let i = 0; i < stepsPerFrame; i++) {
+        if (!stepOnce()) return; // stop animation when done
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // UI wiring
+    ui.mode.addEventListener('change', () => {
+      ui.angleWrap.style.display = ui.mode.value === 'fixed' ? 'inline-flex' : 'none';
+      reset(); tick();
+    });
+    ui.angle.addEventListener('input', () => ui.angleVal.textContent = ui.angle.value + '°');
+    ui.restart.addEventListener('click', () => { reset(); tick(); });
+    ui.stroke.addEventListener('input', () => {});
+    ui.startB.addEventListener('change', () => {});
+    ui.speed.addEventListener('input', () => {});
+    ui.colorMode.addEventListener('change', () => {});
+    ui.singleColor.addEventListener('input', () => {});
+    ui.savePNG.addEventListener('click', () => {
+      // Temporarily draw to a full-res export canvas
+      const exportCanvas = document.createElement('canvas');
+      const scale = 2; // 2x export
+      exportCanvas.width = canvas.clientWidth * scale;
+      exportCanvas.height = canvas.clientHeight * scale;
+      const ex = exportCanvas.getContext('2d');
+      ex.fillStyle = '#000';
+      ex.fillRect(0,0,exportCanvas.width, exportCanvas.height);
+      // redraw path deterministically to export canvas
+      const startB = Math.max(10, Math.min(2000, parseInt(ui.startB.value || 200, 10)));
+      const w = exportCanvas.width, h = exportCanvas.height;
+      const cx = w / 2, cy = h / 2;
+      const maxRadius = Math.min(w, h) * 0.48;
+      const s = maxRadius / (startB * 3 * 1.15);
+      let b = startB, heading = 0, x = cx, y = cy, frame = 0;
+      ex.lineWidth = parseFloat(ui.stroke.value) * scale;
+      while (b > 0) {
+        const turns = ui.mode.value === 'fixed' ? parseFloat(ui.angle.value) : b;
+        heading = (heading - turns) % 360;
+        const dist = b * 3 * s;
+        const rad = heading * Math.PI / 180;
+        const nx = x + Math.cos(rad) * dist;
+        const ny = y + Math.sin(rad) * dist;
+        if (ui.colorMode.value === 'single') {
+          ex.strokeStyle = ui.singleColor.value;
+        } else if (ui.colorMode.value === 'rainbow') {
+          ex.strokeStyle = `hsl(${(frame * 4) % 360} 100% 60%)`;
+        } else {
+          const t = (Math.sin(frame * 0.05) + 1) / 2; // 0..1
+          const h2 = 180 * (1 - t) + 300 * t;
+          ex.strokeStyle = `hsl(${h2} 100% 65%)`;
+        }
+        ex.beginPath(); ex.moveTo(x, y); ex.lineTo(nx, ny); ex.stroke();
+        x = nx; y = ny; b -= 1; frame += 1;
+      }
+      const url = exportCanvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url; a.download = 'turtle-spiral.png'; a.click();
+    });
+
+    window.addEventListener('resize', resize);
+
+    // init
+    resize();
+    ui.angleVal.textContent = ui.angle.value + '°';
+    ui.angleWrap.style.display = ui.mode.value === 'fixed' ? 'inline-flex' : 'none';
+    tick();
+  </script>
+</body>
+</html>

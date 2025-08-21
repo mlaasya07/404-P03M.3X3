@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spiral Background</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; align-items: center; }
+    canvas { position: relative; width: 100%; height: 100%; display: block; align-items: center; }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <script>
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    let START_B = 300;
+    let STEP_MULT = 3;
+    let STEPS_PER_FRAME = 1;
+    let LINE_WIDTH = 1;
+
+    let state;
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initState();
+    }
+
+    function initState() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      const cx = w / 2, cy = h / 2;
+      const maxRadius = Math.min(w, h) * 0.3;
+      const scale = maxRadius / (START_B * STEP_MULT * 1.15);
+      state = {
+        cx, cy,
+        x: cx, y: cy,
+        heading: 0,
+        b: START_B,
+        dir: -1,
+        scale,
+      };
+      ctx.lineWidth = LINE_WIDTH;
+      ctx.strokeStyle = '#B9314F';
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
+
+    function stepOnce() {
+      const turns = state.b;
+      state.heading = (state.heading - turns) % 360;
+      const dist = state.b * STEP_MULT * state.scale;
+      const rad = state.heading * Math.PI / 180;
+      const nx = state.x + Math.cos(rad) * dist;
+      const ny = state.y + Math.sin(rad) * dist;
+
+      ctx.beginPath();
+      ctx.moveTo(state.x, state.y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+
+      state.x = nx; state.y = ny;
+      state.b += state.dir;
+
+      if (state.b <= 1) {
+        state.dir = +1;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+                state.x = state.cx; state.y = state.cy; // recenter
+
+      } else if (state.b >= START_B) {
+        state.dir = -1;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+                state.x = state.cx; state.y = state.cy; // recenter
+
+      }
+    }
+
+    function tick(){
+      for (let i = 0; i < STEPS_PER_FRAME; i++) stepOnce();
+      requestAnimationFrame(tick);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    tick();
+  </script>
+</body>
+</html>
