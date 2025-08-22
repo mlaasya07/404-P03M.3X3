@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="./favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boredom Button — Chaos/Peace Playground</title>
+  <style>
+    :root{
+      --bg1:#0f0f12; --bg2:#141825; --fg:#e8e8f0; --muted:#9aa3b2; --accent:#ff5b77; --good:#6ee7b7; --warn:#fbbf24;
+    }
+    html,body{height:100%;margin:0;user-select: none; /* makes text not selectable */
+}
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--fg);
+      background: radial-gradient(120vmax 120vmax at 10% 10%, #221133 0%, transparent 60%),
+                  radial-gradient(120vmax 120vmax at 90% 90%, #0b2a3a 0%, transparent 60%),
+                  linear-gradient(120deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    user-select: none; /* makes text not selectable */
+
+    }
+    .wrap{position:relative; height:100%; width:100%;}
+    .center{
+      position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:2rem;
+    }
+    h1{font-size: clamp(1.8rem, 4vw, 3rem); margin:0 0 .5rem; letter-spacing:.5px;user-select: none; /* makes text not selectable */
+}
+    p{margin:.25rem 0; color:var(--muted)}
+    .hint{opacity:.9}
+
+    .toolbar{
+      position:fixed; right:1rem; top:1rem; display:flex; gap:.5rem; z-index:5;
+      backdrop-filter: blur(8px);
+    }
+    .btn{
+      border:none; outline:none; cursor:pointer; padding:.7rem 1rem; border-radius:1rem;
+      background:#1c2233; color:var(--fg); font-weight:600; letter-spacing:.2px; box-shadow:0 4px 18px rgba(0,0,0,.25);
+      transition: transform .06s ease, background .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(1px) scale(.98); }
+    .btn.chaos{ background: linear-gradient(135deg, #ff3d6b, #f97316); }
+    .btn.peace{ background: linear-gradient(135deg, #22c55e, #14b8a6); }
+    .btn.mute{ background: linear-gradient(135deg, #64748b, #334155); }
+
+    .track{
+      position:absolute; inset:0; pointer-events:none; filter: drop-shadow(0 8px 24px rgba(0,0,0,.45));
+    }
+
+    /* Particle emoji */
+    .particle{
+      position:fixed; left:0; top:0; transform: translate(-50%, -50%);
+      font-size: clamp(18px, 2.8vw, 46px);
+      will-change: transform, opacity;
+      pointer-events:none;
+    }
+
+    /* Glitch flash */
+    .glitch{
+      animation: hue 800ms ease, shake 280ms linear;
+      filter: hue-rotate(50deg) contrast(1.15) saturate(1.4);
+    }
+    @keyframes hue{ 0%{filter:hue-rotate(0)} 50%{filter:hue-rotate(160deg)} 100%{filter:hue-rotate(0)} }
+    @keyframes shake{
+      0%{ transform: translate(0,0) }
+      25%{ transform: translate(-4px, 2px) }
+      50%{ transform: translate(3px,-3px) }
+      75%{ transform: translate(-2px, 1px) }
+      100%{ transform: translate(0,0) }
+    }
+
+    /* Floating taglines */
+    .ticker{
+      position:fixed; left:50%; bottom:2rem; transform:translateX(-50%);
+      color:#c7d2fe; font-weight:600; letter-spacing:.3px; opacity:.9; text-shadow:0 2px 10px rgba(0,0,0,.35);
+      background: rgba(20,24,37,.55); padding:.6rem 1rem; border-radius: 999px; border:1px solid rgba(255,255,255,.06);
+    }
+
+    /* Peaceful background dots */
+    .stars{ position:absolute; inset:0; pointer-events:none; opacity:.35 }
+    canvas{display:block; position:absolute; inset:0}
+
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background:#0b1220; padding:.2rem .5rem; border-radius:.5rem; border:1px solid rgba(255,255,255,.08)}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="toolbar">
+      <button class="btn chaos" id="btnChaos" title="Unleash chaos (C)">Chaos</button>
+      <button class="btn peace" id="btnPeace" title="Summon peace (P)">Peace</button>
+      <button class="btn mute" id="btnMute" title="Toggle sound (M)">Mute</button>
+    </div>
+
+    <div class="center">
+      <div>
+        <h1>Boredom Button</h1>
+        <p class="hint">Click anywhere to spawn ✨ chaos or calm. Try the buttons up there.</p>
+        <p class="hint">Shortcuts: <span class="kbd">C</span> = Chaos, <span class="kbd">P</span> = Peace, <span class="kbd">M</span> = Mute.</p>
+        <p class="hint">Pro tip: hold mouse to stack effects, release to reset.</p>
+      </div>
+    </div>
+
+    <div class="stars"><canvas id="bg"></canvas></div>
+    <div class="track" id="track"></div>
+    <div class="ticker" id="ticker">ready to misbehave.</div>
+  </div>
+
+  <script>
+    // State
+    let mode = 'chaos';
+    let muted = false;
+    let audioCtx = null;
+    let activeNodes = [];
+
+    const app = document.getElementById('app');
+    const track = document.getElementById('track');
+    const ticker = document.getElementById('ticker');
+
+const chaosPhrases = [
+  "existence is patchy wifi.",
+  "summoning goblins… ok it's just JavaScript.",
+  "today we ride the sine wave.",
+  "chaos is just sparkle with opinions.",
+  "this page screams back.",
+  "error 404: sanity not found.",
+  "you clicked too hard, reality cracked.",
+  "who gave the pixels caffeine?",
+  "glitches are the wallpaper of chaos.",
+  "entropy is just nature’s confetti.",
+  "loading chaos… never complete.",
+  "too many clicks, not enough universe.",
+  "oops, all particles.",
+  "chaos: now with 20% more sparkle.",
+  "you broke nothing, everything broke itself.",
+  "buttons don’t like being pressed either.",
+  "cosmic dice roll: snake eyes.",
+  "pixels unionized, now demanding breaks.",
+  "beware of runaway semicolons.",
+  "your mouse summoned a pixel riot.",
+  "bugs or features? chaos doesn’t care.",
+  "oops, chaos spilled on the floor.",
+  "keyboard shortcuts unlock forbidden realms.",
+  "you clicked faster than light.",
+  "quantum gremlins approve this click.",
+  "system overheated: add more glitter.",
+  "the background is plotting against you.",
+  "chaos smells like burnt JavaScript.",
+  "your clicks summon eldritch emojis.",
+  "cosmos.exe has stopped responding.",
+  "please stop before reality reboots.",
+  "every pixel is screaming quietly.",
+  "error: sanity buffer overflow.",
+  "whoops, you toggled cosmic turbulence.",
+  "your keyboard just summoned thunder.",
+  "glitches are nature’s Easter eggs.",
+  "chaos is just order in denial.",
+  "syntax error in the universe.",
+  "you pressed chaos twice, nice knowing you.",
+  "system logs: [CHAOS INTENSIFIES]",
+  "probability collapsed into spaghetti.",
+  "bugs evolved into features, then gods.",
+  "click detected: summoning mini black hole.",
+  "entropy increased by 12 gigabytes.",
+  "the laws of physics rage quit.",
+  "too much chaos, not enough RAM.",
+  "who coded gravity this badly?",
+  "chaos.exe is self-replicating.",
+  "pixels are drunk again.",
+  "you unleashed Schrödinger’s keyboard cat.",
+  "the void is buffering.",
+  "chaos is trending, calm unsubscribed.",
+  "404 harmony not found.",
+  "congratulations, you broke the tutorial.",
+  "unhandled exception: reality."
+];
+
+
+const peacePhrases = [
+  "calm is a setting, not a destiny.",
+  "inhale… exhale… pixels too.",
+  "stars don’t rush, why should you?",
+  "peace sounds like soft sine waves.",
+  "serenity is a low-pass filter.",
+  "whispers drift like morning fog.",
+  "dew collects without an audience.",
+  "lakes mirror the sky without hurry.",
+  "petals unfold when they choose.",
+  "echoes fade into velvet silence.",
+  "lanterns float across night rivers.",
+  "shadows stretch in gentle patience.",
+  "driftwood rests where tides allow.",
+  "mountains breathe in steady rhythm.",
+  "mist softens every outline.",
+  "footsteps vanish in untouched snow.",
+  "fields sway without resistance.",
+  "time settles like dust on shelves.",
+  "branches trace arcs against dusk.",
+  "flutes hum through quiet valleys.",
+  "rainfall knits a subtle pattern.",
+  "candlelight forgives sharp edges.",
+  "horizons widen without demand.",
+  "still ponds hold entire skies.",
+  "clouds rewrite the daylight slowly.",
+  "sunlight bends over sleepy rooftops.",
+  "roots dig deep in steady devotion.",
+  "lanes curve where rivers guide them.",
+  "sand remembers every tide.",
+  "distant bells carry through fog.",
+  "embers glow long after flame departs.",
+  "winds cradle forgotten songs.",
+  "stone paths wait without judgment.",
+  "dawn paints without correction.",
+  "harbors rest after storms withdraw.",
+  "seashells whisper unfinished stories.",
+  "meadows hum with unseen choirs.",
+  "lanes empty but never lonely.",
+  "pillars of ice hold ancient patience.",
+  "hollows echo with quiet trust.",
+  "constellations linger in silence.",
+  "snowflakes fold into each other.",
+  "orchards ripen at their own pace.",
+  "ravines keep secrets in moss.",
+  "clay cools slowly after the kiln.",
+  "lantern glow stretches across water.",
+  "caves cradle echoes tenderly.",
+  "wells hold secrets without spilling.",
+  "autumn drifts without apology.",
+  "marble wears down into smoothness.",
+  "bamboo bends but does not break.",
+  "waves retreat with dignity.",
+  "hills hum beneath the wind.",
+  "ink dries into gentle permanence."
+];
+
+
+const mutePhrases = [
+  "shhh… the void is listening.",
+  "silence is the loudest button.",
+  "muted, but still watching.",
+  "sometimes noise hides in quiet.",
+  "sound off. imagination on.",
+  "the pause speaks volumes.",
+  "every echo was cancelled.",
+  "your click switched the air off.",
+  "hollow channels hum with nothing.",
+  "the mic turned ghostly.",
+  "conversation dissolved mid-sentence.",
+  "frequency fell off the map.",
+  "airwaves folded into shadows.",
+  "subtitles wait without a voice.",
+  "static gave up whispering.",
+  "ears rest behind curtains.",
+  "noise retreated underground.",
+  "the speaker is asleep.",
+  "volume dial vanished mid-turn.",
+  "the crowd held its breath.",
+  "reverberation got lost in transit.",
+  "clocks tick, but you can’t hear them.",
+  "a hush wrapped the whole screen.",
+  "music packed up and left.",
+  "channels blinked without sound.",
+  "air froze mid-vibration.",
+  "the choir rehearses in mime.",
+  "tones folded into black cloth.",
+  "waves hit mute on themselves.",
+  "your device swallowed the song.",
+  "the void absorbed the chorus.",
+  "recording stopped before the word.",
+  "echoes queued but never played.",
+  "the bell rang in secret.",
+  "soundtrack skipped the scene.",
+  "amplifiers shrugged into stillness.",
+  "the playlist walked away.",
+  "dialogues now lip-sync eternity.",
+  "the hum evaporated.",
+  "the band plays only for themselves.",
+  "silence occupied the headline.",
+  "airports without announcements feel endless.",
+  "breeze moves without a note.",
+  "a page turned noiselessly.",
+  "drums strike only in memory.",
+  "whispers packed themselves in jars.",
+  "halls echo only with footsteps.",
+  "the theater muted the script.",
+  "sirens left mid-alarm.",
+  "the singer mouths, nothing follows.",
+  "all instruments folded shut.",
+  "emptiness performs its own concert.",
+  "a record spins with no groove.",
+  "the forest muted its birds.",
+  "headphones hum without signal.",
+  "space is the ultimate mute button."
+];
+
+    const phrases = [...chaosPhrases, ...peacePhrases, ...mutePhrases];
+    const btnChaos = document.getElementById('btnChaos');
+    const btnPeace = document.getElementById('btnPeace');
+    const btnMute = document.getElementById('btnMute');
+    cycleTicker();
+function cycleTicker(list){
+  ticker.textContent = pick(list);
+}
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+
+    // Init audio on first gesture
+    function ensureAudio(){
+      if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function stopAllAudio(){
+      activeNodes.forEach(n => { try{ n.stop(); } catch(_){}; try{ n.disconnect(); } catch(_){} });
+      activeNodes = [];
+    }
+
+    // CHAOS: detuned oscillators + bit of distortion
+    function playChaos(){
+      if(muted) return;
+      ensureAudio();
+
+      const t = audioCtx.currentTime;
+      const master = audioCtx.createGain();
+      master.gain.value = 0.0001; // start low to avoid pop
+      master.connect(audioCtx.destination);
+
+      const distort = audioCtx.createWaveShaper();
+      distort.curve = makeDistortionCurve(120);
+      distort.oversample = '2x';
+      distort.connect(master);
+
+      const voices = [
+        {type:'sawtooth', f: 120, detune: -7},
+        {type:'square', f: 180, detune: 12},
+        {type:'triangle', f: 90, detune: 6},
+      ].map(v => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = v.type; o.frequency.value = v.f; o.detune.value = v.detune;
+        o.connect(g); g.connect(distort);
+        // crazy sweep
+        o.frequency.exponentialRampToValueAtTime(v.f*6, t+0.22);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.4, t+0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+0.35);
+        o.start(t);
+        o.stop(t+0.4);
+        activeNodes.push(o);
+        return o;
+      });
+
+      master.gain.exponentialRampToValueAtTime(0.8, t+0.05);
+      master.gain.exponentialRampToValueAtTime(0.0001, t+0.45);
+
+      setTimeout(()=>master.disconnect(), 500);
+    }
+
+    function makeDistortionCurve(amount) {
+      const n_samples = 44100;
+      const curve = new Float32Array(n_samples);
+      const deg = Math.PI / 180;
+      for (let i = 0; i < n_samples; ++i ) {
+        const x = i * 2 / n_samples - 1;
+        curve[i] = (3 + amount) * x * 20 * deg / (Math.PI + amount * Math.abs(x));
+      }
+      return curve;
+    }
+
+    // PEACE: soft bell tone
+    function playPeace(){
+      if(muted) return;
+      ensureAudio();
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const lpf = audioCtx.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=1800;
+      o.type='sine'; o.frequency.value=440 + (Math.random()*40-20);
+      o.connect(g); g.connect(lpf); lpf.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.9);
+      o.start(t);
+      o.stop(t+1.1);
+      activeNodes.push(o);
+    }
+
+    // Visual particles
+    const chaosEmojis = ['😱','💥','🔥','🌀','💫','🌈', '⚡','🌪️','☄️','💣','💀','👻','👹','👺','🤯','😵','😵‍💫','🤡','🫨','🥴',
+  '😈','👿','🤖','🕷️','🕸️','🦂','🐍','🐉','🦠','☢️','☣️','⚠️','🚨','🚧','🛑',
+  '🎭','🪞','🎲','🃏','♠️','♣️','♥️','♦️','🔮','🪄','🧨','🎆','🎇','🌋','🌑'];
+    const peaceEmojis = ['✨','🌙','🌸','💧','🫧','🍃', 
+                         '🌷','🌹','🌻','🌼','🌺','💮',
+                         '🏵️','🪷','🌱','🌿','☘️','🍀',
+                         '🌵','🎋','🍂','🍁','🪵','🌾',
+                         '🌊','🌬️','🌫️','❄️','☁️','⛅',
+                         '🌤️','🌥️','🌦️','🌈','🌕','🌖',
+                         '🌗','🌘','🌑','🌒','🌓','🌔',
+                         '⭐','🌟','💫','🌌','🌠','🌙','🪐'];
+
+    function spawnParticles(x,y, count=10){
+      const list = mode==='chaos' ? chaosEmojis : peaceEmojis;
+      for(let i=0; i<count; i++){
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.textContent = list[Math.floor(Math.random()*list.length)];
+        document.body.appendChild(el);
+        const angle = Math.random()*Math.PI*2;
+        const speed = (mode==='chaos' ? 1.8 : 1) * (8+Math.random()*14);
+        const life = 600+Math.random()*600;
+        const start = performance.now();
+        function tick(now){
+          const t = (now-start)/life;
+          const dx = Math.cos(angle)*speed*t*60;
+          const dy = Math.sin(angle)*speed*t*60 - t*160; // float up
+          el.style.left = x+dx+'px';
+          el.style.top = y+dy+'px';
+          el.style.opacity = String(1 - t);
+          el.style.transform = `translate(-50%, -50%) rotate(${t*720}deg)`;
+          if(t<1) requestAnimationFrame(tick); else el.remove();
+        }
+        el.style.left = x+'px'; el.style.top = y+'px';
+        requestAnimationFrame(tick);
+      }
+    }
+
+    // Background peaceful stars
+    const bg = document.getElementById('bg');
+    const ctx = bg.getContext('2d');
+    function resize(){ bg.width = innerWidth; bg.height = innerHeight; }
+    addEventListener('resize', resize); resize();
+
+    const stars = Array.from({length: 200}, ()=>({
+      x: Math.random()*innerWidth,
+      y: Math.random()*innerHeight,
+      r: Math.random()*1.6+0.3,
+      v: Math.random()*0.25+0.05,
+    }));
+    function drawStars(){
+      ctx.clearRect(0,0,bg.width,bg.height);
+      for(const s of stars){
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fillStyle='white'; ctx.globalAlpha = 0.5 + Math.sin(performance.now()*0.002*s.v)*0.45; ctx.fill(); ctx.globalAlpha=1;
+      }
+      requestAnimationFrame(drawStars);
+    }
+    drawStars();
+
+    // Interactions
+    let mouseDown = false;
+    document.addEventListener('mousedown', (e)=>{ mouseDown = true; handleBurst(e); });
+    document.addEventListener('mouseup', ()=>{ mouseDown = false; document.body.classList.remove('glitch'); stopAllAudio(); });
+    document.addEventListener('mousemove', (e)=>{ if(mouseDown) handleBurst(e, true); });
+    document.addEventListener('click', (e)=>{ cycleTicker(); });
+
+    function handleBurst(e, dragging=false){
+      const {clientX:x, clientY:y} = e;
+      spawnParticles(x,y, mode==='chaos' ? (dragging?4:14) : (dragging?3:10));
+      document.body.classList.add('glitch');
+      clearTimeout(handleBurst._t);
+      handleBurst._t = setTimeout(()=>document.body.classList.remove('glitch'), 260);
+      if(mode==='chaos') playChaos(); else playPeace();
+    }
+
+    function cycleTicker(){ ticker.textContent = pick(phrases); }
+
+    // Toolbar
+    btnChaos.onclick = ()=>{
+  mode='chaos';
+  cycleTicker(chaosPhrases);
+  flashBorder('#ff3d6b');
+};
+
+btnPeace.onclick = ()=>{
+  mode='peace';
+  cycleTicker(peacePhrases);
+  flashBorder('#22c55e');
+};
+
+btnMute.onclick = ()=>{
+  muted = !muted;
+  btnMute.textContent = muted ? 'Unmute' : 'Mute';
+  cycleTicker(mutePhrases);
+  flashBorder('#94a3b8');
+};
+
+
+    function flashBorder(color){
+      app.style.boxShadow = `inset 0 0 0 3px ${color}55`;
+      setTimeout(()=> app.style.boxShadow = 'none', 300);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='c'){ btnChaos.click(); }
+      if(e.key.toLowerCase()==='p'){ btnPeace.click(); }
+      if(e.key.toLowerCase()==='m'){ btnMute.click(); }
+    });
+  </script>
+</body>
+</html>
