@@ -278,7 +278,7 @@
   <div id="offline-toast">“Signal lost. But memories remain.”</div>
 
   <header>
-    <h1 style="font-size: 1.3rem;">404.P03M.3X3</h1>
+    <h1 style="font-size: 1.3rem; user-select: none;">404.P03M.3X3</h1>
     <nav>
       <a onclick="showSection('home')">Home ♡</a>
       <div class="dropdown">
@@ -379,10 +379,10 @@
 
   <section id="home" class="active">
   <p>
-    <span class="typed" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
+    <span class="typed" style="user-select: none;" data-typed-items=" ♡ Poetry ♡, ♡ Blogs ♡, ♡ Frequencies ♡, ♡ Glitches ♡, ♡ Dive In! ♡"></span>
   </p>
   </section>
-  <section id="poem-index"><h2>All Poems</h2><p>
+  <section id="poem-index" style="user-select: none;"><h2>All Poems</h2><p>
     <a style="background-color: #000;">1. Telescopic Love</a><br>
     <a style="background-color: #000;">2. I Want That Someone</a><br>
     <a style="background-color: #000;">3. Mi Culo Alto</a><br>
@@ -398,7 +398,7 @@
     <a style="background-color: #000;">13. Love hurts sometimes</a><br>
   </p></section>
 
-<section id="allpoems"><h2>All Poems</h2>
+<section id="allpoems" style="user-select: none;"><h2>All Poems</h2>
     <div id="poem1" style="margin: 2rem 0; border-left: 3px solid #f5427e; padding-left: 2rem;" align="left">
     <h3 style="color:#c91450; font-size:1.7rem;">Telescopic Love</h3>
     <p style="white-space: pre-line; line-height: 1.2;">
@@ -1062,9 +1062,13 @@ In places i couldnt bleed and people i couldn't trust.
 
 
   <footer>
-    <p><strong>&copy; 2025 Laasya — All rights reserved.</strong></p>
-    <p>“In the end, we are all just echoes of our own stories.”</p>
-    <p><span style="cursor: pointer;" onclick="window.location.href='eggs/404.html'">404.</span><span style="cursor: pointer;" onclick="window.location.href='eggs/P03M.html'">P03M.</span>3X3 is a tribute to the glitches and gaps in our digital lives.</p>
+    <p style="user-select: none;"><strong>&copy; 2025 Laasya — All rights reserved.</strong></p>
+    <p style="user-select: none;">“In the end, we are all just echoes of our own stories.”</p>
+    <p><span style="cursor: pointer;" onclick="window.location.href='eggs/404.html'">404.</span><span style="cursor: pointer;" onclick="window.location.href='eggs/P03M.html'">P03M.</span>3X3 is a tribute to the 
+       <span style="cursor: pointer;" onclick="window.location.href='eggs/heart.html'">glitches</span> 
+       and <span style="cursor: pointer;" onclick="window.location.href='eggs/heart3.html'">gaps</span> 
+       in our
+       <span  style="cursor: pointer;" onclick="window.location.href='eggs/heart2.html'">digital</span> lives.</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
@@ -1096,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loop: true,
         smartBackspace: true,
         showCursor: true,
-        cursorChar: '|'
+        cursorChar: '|',
       });
     }
   });
