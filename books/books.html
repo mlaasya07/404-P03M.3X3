@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Books | Laasya</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    color: #ef87aa;
+    font-family: "Playfair Display", serif;
+  }
+
+  h1 {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: 2.5rem;
+  }
+
+  .books-container {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 2rem;
+    scrollbar-width: none;
+  }
+
+  .books-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .book-card {
+    min-width: 240px;
+    height: 320px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all .3s ease;
+    border: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  .book-card:hover {
+    transform: scale(1.05);
+    background: rgba(239,135,170,0.1);
+  }
+
+  .book-title {
+    font-size: 1.3rem;
+    color: #f6dbe6;
+  }
+
+  /* Subtitle */
+  .book-tag {
+    position: absolute;
+    bottom: 1rem;
+    font-size: .75rem;
+    color: #ef87aa;
+    opacity: .8;
+  }
+
+  /* Back */
+  .back {
+    display: block;
+    text-align: center;
+    margin: 2rem;
+    color: #ef87aa;
+    text-decoration: none;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Books</h1>
+
+<div class="books-container">
+
+  <!-- BOOK 1 -->
+  <div class="book-card" onclick="openBook('classthatbreathes.html')">
+    <div>
+      <div class="book-title">The Class That Breathes</div>
+      <div class="book-tag">Psychological • Survival • Apocalypse</div>
+    </div>
+  </div>
+
+  <!-- BOOK 2 -->
+  <div class="book-card" onclick="openBook('./books/crimson-frequency.html')">
+    <div>
+      <div class="book-title">Crimson Frequency</div>
+      <div class="book-tag">Sci-Fi • Thriller • Future</div>
+    </div>
+  </div>
+
+  <!-- ADD MORE BOOKS BELOW -->
+  
+</div>
+
+<a class="back" href="index.html">← Back to Home</a>
+
+<script>
+  function openBook(page){
+    window.location.href = page;
+  }
+</script>
+
+</body>
+</html>
