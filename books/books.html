@@ -77,6 +77,101 @@
     color: #ef87aa;
     text-decoration: none;
   }
+
+  /* small helper text under title */
+    .hint {
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      color: rgba(239,135,170,0.85);
+    }
+
+    /* ---------------------- POPUP MODAL --------------------------- */
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .popup {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .popup h2 {
+      color: #ef87aa;
+      margin-bottom: 1rem;
+    }
+
+    input[type="password"] {
+      width: 80%;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 1rem;
+      outline: none;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      margin: 0.4rem;
+      font-size: 1rem;
+      font-family: "Playfair Display", serif;
+      transition: 0.25s ease;
+    }
+
+    .open-btn {
+      background: #ef87aa;
+      color: #000;
+    }
+    .open-btn:hover {
+      background: #ff9fc4;
+    }
+
+    .cancel-btn {
+      background: #333;
+      color: #ef87aa;
+    }
+    .cancel-btn:hover {
+      background: #444;
+    }
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.35s ease;
+}
+
 </style>
 </head>
 
@@ -87,16 +182,14 @@
 <div class="books-container">
 
   <!-- BOOK 1 -->
-  <div class="book-card" onclick="openBook('classthatbreathes.html')">
-    <div>
+    <div class="book-card" onclick="openModal('classthatbreathes.html')">    <div>
       <div class="book-title">The Class That Breathes</div>
       <div class="book-tag">Psychological • Survival • Apocalypse</div>
     </div>
   </div>
 
   <!-- BOOK 2 -->
-  <div class="book-card" onclick="openBook('./books/crimson-frequency.html')">
-    <div>
+    <div class="book-card" onclick="openModal('crimson-frequency.html')">      <div>
       <div class="book-title">Crimson Frequency</div>
       <div class="book-tag">Sci-Fi • Thriller • Future</div>
     </div>
@@ -108,10 +201,70 @@
 
 <a class="back" href="index.html">← Back to Home</a>
 
+<!-- Popup Modal -->
+  <div class="overlay" id="popupOverlay">
+    <div class="popup">
+      <h2>Enter Password</h2> 
+      <input type="password" id="passwordInput" placeholder="Password">
+      <div id="errorMsg" style="
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #ef87aa;
+        min-height: 1.2rem;">
+      </div>
+      <br>
+      <button class="btn open-btn" onclick="validatePassword()">Open Book</button>
+      <button class="btn cancel-btn" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
 <script>
-  function openBook(page){
-    window.location.href = page;
+let currentPage = "";
+let attemptsLeft = 3;
+
+function openModal(page) {
+  currentPage = page;
+  attemptsLeft = 3; // reset each time user opens popup
+
+  document.getElementById("popupOverlay").style.display = "flex";
+  document.getElementById("passwordInput").value = "";
+  document.getElementById("errorMsg").innerText = "";
+  document.getElementById("passwordInput").focus();
+}
+
+function closeModal() {
+  document.getElementById("popupOverlay").style.display = "none";
+}
+
+function validatePassword() {
+  const entered = document.getElementById("passwordInput").value;
+  const input = document.getElementById("passwordInput");
+  const msg = document.getElementById("errorMsg");
+
+  // Already locked
+  if (attemptsLeft <= 0) {
+    msg.innerText = "hint: drink";
+    return;
   }
+
+  if (entered === "rasna") {
+    window.location.href = currentPage;
+  } else {
+    attemptsLeft--;
+
+    // trigger shake animation
+    input.classList.remove("shake");
+    void input.offsetWidth; // reset animation
+    input.classList.add("shake");
+
+    if (attemptsLeft > 0) {
+      msg.innerText = `incorrect. ${attemptsLeft} ${attemptsLeft === 1 ? "try" : "tries"} left`;
+    } else {
+      msg.innerText = "hint: drink";
+    }
+  }
+}
+
 </script>
 
 </body>
