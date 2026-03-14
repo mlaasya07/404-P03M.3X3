@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Class That Breathes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --rose: #ef87aa;
+  --rose-dark: #c91450;
+  --rose-deep: #8a0a35;
+  --rose-pale: #f6dbe6;
+  --rose-dim: rgba(239,135,170,0.15);
+  --rose-glow: rgba(239,135,170,0.08);
+  --ink: #0a0608;
+  --ink-mid: #100810;
+  --text: #e8d0dc;
+  --text-muted: rgba(232,208,220,0.55);
+  --sidebar-w: 260px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.85;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ─── NOISE OVERLAY ─────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* ─── PROGRESS BAR ───────────────────────────────── */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--rose-deep), var(--rose), #ffd6e8);
+  width: 0%;
+  z-index: 1000;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 12px var(--rose);
+}
+
+/* ─── SIDEBAR / TOC ──────────────────────────────── */
+#toc-toggle {
+  position: fixed;
+  top: 1.2rem; left: 1.2rem;
+  width: 38px; height: 38px;
+  background: transparent;
+  border: 1px solid rgba(239,135,170,0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  z-index: 500;
+  transition: border-color 0.2s, background 0.2s;
+}
+#toc-toggle:hover { border-color: var(--rose); background: var(--rose-dim); }
+#toc-toggle span {
+  display: block;
+  width: 18px; height: 1.5px;
+  background: var(--rose);
+  transition: transform 0.3s, opacity 0.3s;
+}
+#toc-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+#toc-toggle.open span:nth-child(2) { opacity: 0; }
+#toc-toggle.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+#sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: linear-gradient(180deg, #0d060a 0%, #110a0e 100%);
+  border-right: 1px solid rgba(239,135,170,0.12);
+  padding: 5rem 1.5rem 2rem;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  z-index: 400;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rose-dark) transparent;
+}
+#sidebar.open { transform: translateX(0); }
+
+#sidebar h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 2rem;
+  opacity: 0.7;
+}
+
+.toc-item {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  margin-bottom: 0.25rem;
+  border-radius: 3px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.toc-item:hover, .toc-item.active {
+  color: var(--rose);
+  border-left-color: var(--rose);
+  background: var(--rose-glow);
+}
+.toc-item .ch-num {
+  display: block;
+  font-size: 0.5rem;
+  opacity: 0.5;
+  margin-bottom: 0.1rem;
+}
+
+/* ─── GLOBAL USER-SELECT NONE ────────────────────── */
+body, article, header, nav, #chapter-indicator {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ─── READING CONTROLS ───────────────────────────── */
+#controls {
+  position: fixed;
+  top: 1.2rem; right: 1.2rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 500;
+  align-items: center;
+}
+
+.ctrl-btn {
+  height: 34px;
+  padding: 0 0.75rem;
+  background: transparent;
+  border: 1px solid rgba(239,135,170,0.25);
+  border-radius: 4px;
+  color: var(--rose);
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+  white-space: nowrap;
+}
+.ctrl-btn:hover { border-color: var(--rose); background: var(--rose-dim); }
+.ctrl-btn.active { border-color: var(--rose); background: var(--rose-dim); color: var(--rose-pale); }
+
+/* Font size label */
+#font-display {
+  width: 38px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  border: 1px solid rgba(239,135,170,0.12);
+  border-radius: 4px;
+  user-select: none;
+}
+
+/* ─── MODAL OVERLAY ──────────────────────────────── */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,2,4,0.88);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  padding: 1.5rem;
+}
+.modal-bg.show { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: #0f070c;
+  border: 1px solid rgba(239,135,170,0.2);
+  border-radius: 6px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 2.5rem;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rose-dark) transparent;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: transparent;
+  border: 1px solid rgba(239,135,170,0.2);
+  border-radius: 3px;
+  color: var(--rose);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
+}
+.modal-close:hover { background: var(--rose-dim); border-color: var(--rose); }
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--rose-pale);
+  margin-bottom: 0.4rem;
+}
+.modal-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+}
+
+/* ─── ROSTER CARDS ───────────────────────────────── */
+.roster-card {
+  border: 1px solid rgba(239,135,170,0.1);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.roster-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(239,135,170,0.05);
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(239,135,170,0.08);
+}
+.roster-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--rose-pale);
+}
+.roster-role {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.52rem;
+  color: var(--rose);
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+.roster-body {
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem 2rem;
+}
+.roster-field { }
+.roster-field.full { grid-column: 1 / -1; }
+.roster-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.roster-value {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+.roster-section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--rose);
+  opacity: 0.5;
+  margin: 1.8rem 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.roster-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(239,135,170,0.2), transparent);
+}
+
+/* ─── MAPS PLACEHOLDER ───────────────────────────── */
+.maps-placeholder {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  line-height: 2.2;
+}
+.maps-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1.2rem;
+  opacity: 0.2;
+}
+
+/* ─── HEADER ─────────────────────────────────────── */
+header {
+  text-align: center;
+  padding: 6rem 2rem 3rem;
+  position: relative;
+}
+
+header::after {
+  content: '';
+  display: block;
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rose), transparent);
+  margin: 2rem auto 0;
+}
+
+.header-eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.2rem;
+}
+
+header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  color: var(--rose-pale);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 80px rgba(239,135,170,0.25);
+}
+
+.header-sub {
+  margin-top: 1rem;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ─── MAIN READER ─────────────────────────────────── */
+#reader {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 2rem 8rem;
+  transition: font-size 0.2s;
+}
+
+/* ─── CHAPTER BLOCK ──────────────────────────────── */
+.chapter {
+  margin-bottom: 6rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.chapter.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chapter-header {
+  margin-bottom: 3rem;
+  text-align: center;
+  padding: 3rem 0 2.5rem;
+  border-top: 1px solid rgba(239,135,170,0.15);
+  position: relative;
+}
+
+.chapter-header::before {
+  content: attr(data-chapter);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rose);
+  opacity: 0.6;
+  display: block;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.chapter-title-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  color: var(--rose-pale);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
+
+/* ─── SECTION HEADINGS ───────────────────────────── */
+.section-head {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rose);
+  opacity: 0.75;
+  margin: 3.5rem 0 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(239,135,170,0.3), transparent);
+}
+
+/* ─── PARAGRAPH PROSE ────────────────────────────── */
+.chapter p {
+  margin-bottom: 1.5em;
+  text-align: justify;
+  hyphens: auto;
+  font-weight: 300;
+  color: var(--text);
+}
+
+
+
+/* ─── INLINE STYLES ──────────────────────────────── */
+strong { color: var(--rose-pale); font-weight: 600; }
+em { color: rgba(246,219,230,0.85); font-style: italic; }
+
+/* ─── SOUND / MECHANICAL TEXT ─────────────────────── */
+.sound {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8em;
+  color: var(--rose);
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+
+/* ─── TERMINAL / LOG BLOCKS ──────────────────────── */
+.terminal {
+  background: #0a0208;
+  border: 1px solid rgba(239,135,170,0.2);
+  border-left: 3px solid var(--rose-dark);
+  border-radius: 4px;
+  padding: 1.2rem 1.5rem;
+  margin: 2rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.8;
+  color: rgba(239,135,170,0.9);
+  position: relative;
+  overflow: hidden;
+}
+.terminal::before {
+  content: '$ LOG OUTPUT';
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(239,135,170,0.1);
+}
+.terminal-line { display: block; }
+.terminal-line::before { content: '> '; opacity: 0.5; }
+
+/* ─── DIALOGUE EMPHASIS ──────────────────────────── */
+.chapter p:has(+ p) { }
+
+/* ─── DOT BREAK ──────────────────────────────────── */
+.dot-break {
+  text-align: center;
+  letter-spacing: 0.6em;
+  color: rgba(239,135,170,0.35);
+  margin: 3rem 0;
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+/* ─── QUOTE PULL ─────────────────────────────────── */
+.pull-quote {
+  border-left: 2px solid var(--rose);
+  margin: 2.5rem 0 2.5rem 1rem;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.25em;
+  color: rgba(246,219,230,0.75);
+  line-height: 1.5;
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--rose-dark); border-radius: 2px; }
+
+/* ─── BACK LINK ──────────────────────────────────── */
+.back-link {
+  display: block;
+  text-align: center;
+  padding: 4rem 2rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--rose); }
+
+/* ─── OVERLAY (sidebar backdrop) ─────────────────── */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+  z-index: 300;
+}
+#overlay.show { opacity: 1; pointer-events: all; }
+
+/* ─── CHAPTER PROGRESS INDICATOR ────────────────── */
+#chapter-indicator {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  text-align: right;
+  pointer-events: none;
+  z-index: 200;
+  line-height: 1.6;
+}
+#chapter-indicator .ch-label {
+  color: var(--rose);
+  opacity: 0.7;
+  display: block;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 600px) {
+  #reader { padding: 1.5rem 1.2rem 6rem; }
+  header { padding: 5rem 1.5rem 2rem; }
+  .chapter p:first-of-type::first-letter { font-size: 3em; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="progress-bar"></div>
+<div id="overlay"></div>
+
+<!-- Sidebar Toggle -->
+<button id="toc-toggle" aria-label="Table of Contents">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar TOC -->
+<nav id="sidebar">
+  <h2>Contents</h2>
+  <a href="#ch1" class="toc-item"><span class="ch-num">Chapter I</span>The Last Class</a>
+  <a href="#ch2" class="toc-item"><span class="ch-num">Chapter II</span>The Silence After Bell</a>
+  <a href="#ch3" class="toc-item"><span class="ch-num">Chapter III</span>The Air Turns Heavy</a>
+  <a href="#ch4" class="toc-item"><span class="ch-num">Chapter IV</span>Hollow Floors</a>
+  <a href="#ch5" class="toc-item"><span class="ch-num">Chapter V</span>The Rules of Breathing</a>
+  <a href="#ch6" class="toc-item"><span class="ch-num">Chapter VI</span>Under the Fluorescents</a>
+  <a href="#ch7" class="toc-item"><span class="ch-num">Chapter VII</span>The Listening Room</a>
+  <a href="#ch8" class="toc-item"><span class="ch-num">Chapter VIII</span>The Filtration Unit</a>
+  <a href="#ch9" class="toc-item"><span class="ch-num">Chapter IX</span>The Lab Below</a>
+  <a href="#ch10" class="toc-item"><span class="ch-num">Chapter X</span>The Vent</a>
+</nav>
+
+<!-- Reading Controls -->
+<div id="controls">
+  <button class="ctrl-btn" id="font-down" title="Decrease font size">A−</button>
+  <div id="font-display">16</div>
+  <button class="ctrl-btn" id="font-up" title="Increase font size">A+</button>
+  <button class="ctrl-btn" id="btn-roster">Roster</button>
+  <button class="ctrl-btn" id="btn-maps">Maps</button>
+</div>
+
+<!-- Chapter Indicator -->
+<div id="chapter-indicator">
+  <span class="ch-label" id="curr-ch-label">—</span>
+  <span id="curr-ch-name">—</span>
+</div>
+
+<header>
+  <p class="header-eyebrow">A Novel by Laasya</p>
+  <h1>The Class That Breathes</h1>
+  <p class="header-sub">Seven souls. One room. A sealed equation.</p>
+</header>
+
+<article id="reader">
+<article id="reader">
+
+<!-- ══════════════════ CHAPTER 1 ══════════════════ -->
+<section class="chapter" id="ch1">
+  <div class="chapter-header" data-chapter="Chapter I">
+    <div class="chapter-title-text">The Last Class</div>
+  </div>
+
+  <p>No one ever imagines the end of the world smells like floor polish and chalk dust.</p>
+  <p>That morning, the classroom hummed with its usual inertia: the low scrape of chairs, the scratch of pens on notebooks, the half-hearted sighs of students who had already been awake too long. The sun slanted lazily across the city, brushing over concrete and glass with a golden hue that seemed reluctant to illuminate a world already tired. Someone had taped a paper heart to the board — Valentine's Day, red and slightly crooked. Mr. Dev had left it there. He wasn't the kind of man who removed things that still meant something to someone.</p>
+  <p>It was the second period. Computer Science. Mr. Dev's class — the man who made syntax sound like philosophy and sarcasm sound like oxygen.</p>
+  <p>He stood at the front, sleeves rolled up, holding a whiteboard marker like a weapon. "Today," he said, "we will learn recursion. The art of making the same mistake again and again, until your program — or your life — crashes."</p>
+  <p>Half the class groaned. I smiled. He wasn't wrong.</p>
+  <p>My phone buzzed in my bag at 9:12 a.m. I glanced at the screen. Maddie. I silenced it. She called most mornings, and I called back most evenings, and the routine had never felt fragile until the moment I chose not to break it.</p>
+  <p>I would call her back after class.</p>
+  <p>Outside, the sky began to hum — that low, static vibration that had become part of city life ever since the airborne alerts started flashing on the news. We all knew something was spreading, something invisible. But the government said it was "contained." They always say that before they disappear from the broadcast.</p>
+  <p>In the classroom next to ours, someone coughed.</p>
+  <p>It sounded <strong>wet</strong>.</p>
+  <p>Then came another. Then several, in a rhythm that no longer felt human.</p>
+  <p>Siddharth turned his head, frowning. "They're still doing PE, right?"</p>
+  <p>Mr. Dev opened his mouth to answer, but the coughing turned into retching. A chair scraped violently against the floor. Something fell. Something heavy. And then silence. The kind that doesn't fade.</p>
+  <p>Mr. Dev lowered his marker. The sound of its cap clicking back on was the loudest thing in the room.</p>
+  <p>I don't know what moved me. Instinct, maybe. I crossed the room and slammed our windows shut. The metal frames groaned like they didn't want to obey. Then I locked them. All of them. I drew the curtains tight.</p>
+  <p>Everyone stared at me like I'd lost it.</p>
+  <p>Mr. Dev raised an eyebrow. "Planning a surprise party?"</p>
+  <p>I almost laughed. "Just… something felt wrong."</p>
+  <p>It did. The air outside wasn't moving right. The trees in the courtyard weren't swaying — they were holding still, like they were listening too.</p>
+  <p>Minutes dragged. We waited for someone to check in from the next class. No one did.</p>
+  <p>When Tanya — the class bully — got up to peek through the curtain, I stopped her. "Don't."</p>
+  <p>She rolled her eyes. "You think air's going to bite me?"</p>
+  <p>She didn't open it. Not then.</p>
+  <p>Mr. Dev, with that eerie calm of his, walked to his desk, sat down, and sighed. "Well," he said, "attendance is finally improving."</p>
+  <p>We laughed. Not because it was funny, but because laughter felt like proof we were still alive.</p>
+  <p>By noon, the laughter died. The corridor smelled faintly like copper and something chemical, sharp and wrong. Something was leaking — not from the ceiling, but through the air vents.</p>
+  <p>Aarav said his head hurt. Ishani went quiet. Arjun adjusted his glasses every few seconds, like he was trying to focus on something that wasn't real — the youngest of us, the most careful, the one who noticed things before he understood them. Those were the early signs: the dull headache behind the eyes, the nausea, the difficulty concentrating. The air in the sealed room was slowly becoming a trap of our own making — CO₂ building up with every breath we shared.</p>
+  <p>That's when the alarms started. Not the fire kind. The evacuation ones.</p>
+  <p>The school's loudspeakers crackled, stuttered, then said just one word before dying again: <strong>"CONTAINMENT."</strong></p>
+  <p>Then nothing. No teachers. No footsteps. No screams. Just the soft hiss of dying electricity.</p>
+  <p>We waited. We hoped someone would come. They didn't.</p>
+  <p>By evening, the light through the curtains turned gold, then gray, then the color of paper ash.</p>
+  <p>I don't know who said it first, but someone whispered, "We're running out of clean air."</p>
+  <p>We had closed everything. Sealed ourselves perfectly. We had saved our lives… and trapped them too. The paradox hung in the room, taut and suffocating.</p>
+  <p>Mr. Dev looked at us one by one — seven students, one teacher, eight souls suspended between panic and denial. He spoke softly, like someone giving a bedtime story to fear itself.</p>
+  <p>"Alright, troops. We'll need supplies. Food, water, something to help the air. Any volunteers?"</p>
+  <p>Siddharth raised his hand before I could stop him. "I'll go."</p>
+  <p>I did too. "You'll need someone to carry the stuff."</p>
+  <p>Arjun hesitated — the smallest, youngest of us — but then stood up. "I'll come. I know where the science prep room is. There might be oxygen equipment."</p>
+  <p>Mr. Dev nodded slowly. "Smart. Team three. Bring me back something worth breathing for."</p>
+  <p>We tore strips of fabric for makeshift masks, soaked them in diluted bleach solution from the lab. It was imperfect chemistry — bleach fumes are no friend to damaged lungs — but better than nothing for filtering the worst of whatever was drifting through the halls. The hallways felt endless now, the kind of silence that vibrates through bone.</p>
+  <p>We split near the main stairs. I went to the staff room. Everything smelled stale — milk turned sour, coffee abandoned mid-sip. I found a half-box of chips, some fruit, and what looked like salvation in a steel tiffin.</p>
+  <p>Sid raided the vending machines for water. He came back, panting, shirt wrapped around his face like armor. "Got enough," he gasped. "Barely made it past the library — the doors there are stuck shut."</p>
+  <p>I smiled under my mask. "You always make it."</p>
+  <p>On my way back down the corridor, I passed a maintenance panel left half-open — the kind that covered the building's old duct access. A gust of cold air drifted out, and in the dark of the shaft behind it, something moved. A streak of white. Gone before I could be certain of it. I stood there for a moment, staring at the dark rectangle. The cold air carried a faint, sharp smell — ozone, clean and strange, wrong for a building that smelled otherwise of rot. Then from three floors down, Sid called my name, and I moved.</p>
+  <p>We waited for Arjun.<br>Ten minutes.<br>Twenty.<br>An hour.</p>
+  <p>When he stumbled back, the light in his eyes was gone. "Guys, I — I think I touched something… something bad." He was drenched in sweat, shaking, muttering half-words. Then came the vomiting — loud, violent, relentless.</p>
+  <p>Everyone froze. Tanya backed into the corner, hand over her mouth. "He's infected."</p>
+  <p>Mr. Dev said nothing. His jaw tightened. His hand twitched toward Arjun — then stopped.</p>
+  <p>Arjun's breathing slowed. He looked at me — just for a second — terrified. Then he tried to say something. His mouth opened. Nothing came out but blood.</p>
+  <p>And before any of us could move, Tanya acted. She didn't shove him toward the sealed window. Instead she cornered him, driving him toward the reinforced steel door to the hallway. The moment he stumbled across the threshold, she slammed the door shut. The deadbolt mechanism engaged with a final, chilling <em>thunk</em>.</p>
+  <p>Tanya leaned against the door, panting, her eyes wide with a manic purpose. "He's infected," she hissed. "We don't share air with the dying."</p>
+  <p>Silence. The faint, horrifying sound of Arjun retching and desperately beating against the metal faded until all we heard was his final, strangled gasping, sealed out in the contaminated corridor.</p>
+
+  <div class="dot-break">· · · · · · ·</div>
+  <p class="section-head">The Aftermath</p>
+
+  <p>We all stared at the door, the finality of the lock painting our faces in orange grief. Aarav whimpered. Ishani turned away. Mr. Dev closed his eyes and whispered, "Well… that escalated quickly." The words hung like smoke. No one laughed this time.</p>
+  <p>The air inside felt heavy. The air outside felt deadlier. I couldn't tell which prison was worse.</p>
+  <p>We barricaded the door with chairs and desks. Every breath felt measured. Every movement sounded like it would summon catastrophe.</p>
+  <p>Hours passed. Shadows stretched across the ceiling, painted in the dim orange glow of the sunset. Tanya muttered curses under her breath. Sid hummed nervously, an attempt at calm, while Aarav huddled silently, tears streaming down his face.</p>
+  <p>I checked the makeshift masks again. The bleach had mostly dried out, leaving a thin, bitter film on the fabric. The masks were degrading — their filtering capacity dropping by the minute. It reminded me that survival had a taste, one that lingered unpleasantly on the tongue.</p>
+  <p>Mr. Dev moved among us slowly, inspecting our barricades, our masks, our bodies. He paused beside me, eyes scanning the room. "Discipline," he said quietly, "is breathing in rhythm with fear. Control the small things and the large ones might ignore you."</p>
+  <p>I nodded. He turned away, adjusting a chair against the door. Even his calm was unsettling — the kind that tells you the world is worse than you imagine.</p>
+  <p>Night deepened. The hum outside became sharper, pressing against the walls like the city itself was holding its breath. We whispered plans: rotating rest shifts, rationing, assigning lookout points. Every suggestion carried the weight of death.</p>
+  <p>By midnight, hunger was a faint shadow behind panic. By one a.m., the pressure of too much CO₂ pressed on our chests as heavily as the fear of infection itself. Every cough, every drip of liquid somewhere in the building, made us flinch. Somewhere far away, a bell rang. Just once. Hollow. Faint. An echo of normalcy that was no longer real.</p>
+  <p>No one moved. We didn't breathe too loudly. The air itself seemed hostile.</p>
+  <p>I caught Sid's eye. He gave a small, trembling nod. It was agreement — not hope, but acknowledgment that we were still alive. That in itself was enough.</p>
+  <p>I huddled with the others, trying to remember what normal felt like. The smell of chalk dust. Floor polish. The static hum. The laughter. The sunlight. The paper heart on the board, slightly crooked. All of it was still there, trapped beneath a thin, cruel layer of apocalypse.</p>
+  <p>And I realized — this was only the beginning. The school building had become our cage, our sanctuary, our tomb. We were six students and one teacher. Alive, yes. But how long before the air itself finished what the world outside had started?</p>
+  <p>We waited. And we breathed. <em>Carefully.</em></p>
+</section>
+
+<!-- ══════════════════ CHAPTER 2 ══════════════════ -->
+<section class="chapter" id="ch2">
+  <div class="chapter-header" data-chapter="Chapter II">
+    <div class="chapter-title-text">The Silence After Bell</div>
+  </div>
+
+  <p>The moment the final thunk of the deadbolt echoed through the thick steel door, the world inverted. We were no longer simply trapped; we were sealed. We were six breaths left in a room designed for seventy, and one of those six was a murderer.</p>
+  <p>I didn't move. Moving costs oxygen, and right now, oxygen was the currency of survival. I held my breath, calibrating the panic flooding my system, reducing it to cold, usable data. My mind ran a frantic loop:</p>
+
+  <div class="terminal">
+    <span class="terminal-line">Input: Arjun is gone.</span>
+    <span class="terminal-line">Input: Tanya is a direct threat.</span>
+    <span class="terminal-line">Input: The room is contaminated.</span>
+    <span class="terminal-line">Action: Quantify and Control.</span>
+  </div>
+
+  <p>Every nerve ending screamed, but my frontal lobe imposed a firewall, filtering the terror into a solvable equation.</p>
+  <p>The air itself felt like wet cement against my lungs. It was thick with the immediate trauma — the sharp, metallic scent of blood, the sour, bile-ridden odor of what Tanya claimed was infection, and a faint, acrid chemical tang from the bleach we'd used on our makeshift masks. Every inhale was a transaction: a tiny intake of diminishing life for a great release of measured dread. The ambient temperature, always slightly too warm in this poorly vented classroom, was now rising, coating everything in a clammy film that amplified the claustrophobia.</p>
+  <p>Tanya was the first to reclaim space. She peeled her body off the reinforced steel door, breathing hard, but not with fear. Her chest rose and fell with a disturbing sense of triumph. She didn't look guilty; she looked justified, an extremist vindicated by the perceived purity of her action.</p>
+  <p>"He was infected," she gasped, wiping sweat from her brow, not a drop of genuine sorrow in her eyes. "You all saw it. He was vomiting blood. We can't share air with the dead. Survival doesn't need kindness. It needs control. It needs action."</p>
+  <p>Her words were meant for us, a proclamation of her new, ruthless authority. The glance she cast toward Sid, however, was a deliberate, pointed challenge. Siddharth, the protector, the embodiment of courage, failed to rise. He was crouched against the back wall, his massive frame shaking in silent, agonizing shock. Arjun had been his closest friend, and Sid's self-sacrificial nature had utterly broken beneath the weight of inaction. He had watched and done nothing. His courage had choked on the fear of contamination, the fear that Tanya had weaponized.</p>
+  <p>Mr. Dev, usually a steady current of dry wit, was pale, his hands clasped so tightly they were white at the knuckles. "We need to clean this," he stated, his voice flat, stripped of all sarcasm. "That… that mess is a hazard. We can't leave it." He reached for a discarded hand towel, but his hand froze halfway, unable to touch the physical proof of our moral compromise.</p>
+  <p>Ishani, our quiet core of empathy, moved before anyone else could seize the moment. She didn't look at Tanya or Sid, but only at the spreading stain on the floor. Her empathy, which I always thought was her weakness, became an instant purpose. Her movements were slow, almost meditative. She took the towel from Mr. Dev's hand, walked to the meager water supply — the bottles Sid had wrestled from the vending machine — and wet the fabric.</p>
+  <p>It was a ritual of denial. She scrubbed the area where Arjun had stumbled back into the room, methodically sanitizing the floor with slow, quiet strokes. She wasn't just cleaning a biological mess; she was cleaning the conscience of the group, desperately trying to prove that kindness could still exist here. She worked until the towel was soaked crimson and the floor was merely damp and smelling faintly of disinfectant.</p>
+  <p>Aarav, the crybaby but a genius, watched Ishani working. He wasn't crying, yet. He was vibrating, his energy trapped between terror and observation. He let out a low, pathetic whimper that was closer to a mechanical noise than human grief. He was absorbing the terror of the room, preparing to channel it into something else.</p>
+  <p>While Ishani worked, I ran my priority loop: Resource Management. My gaze fixed solely on Tanya. If I let her control the supplies, she would use them not for survival, but for absolute domination.</p>
+  <p>"We need to ration the supplies immediately," I stated, cutting through the heavy atmosphere. My voice was level, focused entirely on quantifiable data. "Sid, you need the most air. Your size requires a larger metabolic exchange, which means you are our most vulnerable asset and cannot be our runner right now."</p>
+  <p>Sid didn't even look up to hear the assessment of his own body as a liability.</p>
+  <p>"Tanya, you're our physically weakest asset. Your reckless reactions will burn through oxygen we can't afford to waste. Control has to come from calculation, not impulse."</p>
+  <p>Tanya immediately bristled. "I'll take charge of the water and food. I know how to make supplies last under pressure. It's too important to leave to theory."</p>
+  <p>"No," I countered, my tone entirely clinical. "We established rules of breathing before, when I secured the room. The person who created the initial containment system manages the logistics of its failure. I'll manage the rations and the air quality calculations." I didn't wait for her agreement. I took the small bag of fruit and chips, and the remaining water bottles. I secured it all beneath my desk, out of Tanya's reach.</p>
+  <p>I watched the muscle tick in Tanya's jaw. <em>Her fear manifests as control. My control must neutralize her fear.</em> I understood then that my greatest advantage was my capacity to divorce emotion from necessity; Tanya's was her willingness to sacrifice everything else.</p>
+  <p>Tanya scoffed, her lip curling in cold frustration, but she didn't challenge the physical act directly. Instead, she chose a corner of the room, pulled a chair, and sat facing us, a silent, watchful judge.</p>
+  <p>Meanwhile, the room was degrading. The increasing carbon dioxide level was no longer theoretical; it was physical. A thin sheen of sweat covered Mr. Dev's forehead. Ishani had finished cleaning, but her hands were shaking, and her breathing was shallow. My own focus began to drift, colors looking slightly muted, the edges of panic fuzzing the sharp corners of my analysis. I pressed my fingers against my temples, trying to force the blood to carry more oxygen.</p>
+  <p>It was Aarav who finally broke the tension, not with a scream, but a rambling, panicked complaint.</p>
+  <p>"My head… my head still hurts," he stammered, pulling at his hair. "The air is too heavy. It's too slow, too thick. We used too many breaths arguing. We wasted too many breaths on arguing… about him." He gestured vaguely toward the door, then shrank back, instantly terrified of what he had implied.</p>
+  <p>"Aarav," Mr. Dev began, his voice strained, "deep breaths. Control."</p>
+  <p>But Mr. Dev was also faltering. His eyes landed on the spot where Arjun always sat — the small, youngest member of the group, now vanished. Arjun's school bag was gone, taken when he returned from the run, but his small, wire-rimmed glasses lay forgotten on the floor beside his overturned chair.</p>
+  <p>It was an unbearable detail. Mr. Dev walked over and picked them up, his hands shaking slightly, and placed them gently on the desk, lining them up with the desk's edge. It was the only funeral we would have.</p>
+  <p>The silence returned, but this time, it felt heavier, colder, defined by the empty chair and the discarded glasses. We were seven at the start. Now we were six. And one of those six was a predator.</p>
+  <p>Something in me switched. Fear became math. Survival became numbers. I pulled out my phone, the battery nearly dead, and accessed the school's old, unsecured server I'd hacked into weeks ago for a project. I needed data. What was the internal cubic meter volume of the room? What was the natural leak rate of the sealed windows? Could I calculate our Time-To-Suffocation (T<sub>s</sub>) based on average human oxygen consumption (VO₂)?</p>
+  <p>I keyed in the data: VO₂ for six people (adjusting Siddharth's rate upwards). I calculated the internal volume V: approximately 500m³. I needed a variable for the contamination rate. I didn't have one. The result was useless, a logic loop that only ended in failure. I needed a new variable, a new input, or the result would always be zero.</p>
+  <p>Just as the quiet desperation reached its peak, the low static hum I had noticed before returned. It wasn't just the failing electricity; it was deeper, resonating through the concrete floor and up the walls. It was rhythmic, like a mechanical intake, then a slow, ragged exhale.</p>
+
+  <p class="pull-quote"><span class="sound">thrum... hiss... thrum... hiss...</span></p>
+
+  <p>The building itself was breathing, and it was getting closer. It was too regular to be settling and too loud to be distant. It was coming from the floor, and I realized with a fresh surge of dread: if that rhythm continued, it would consume all the remaining air in this room. The sealed sanctuary was about to become a vacuum.</p>
+  <p>I looked from the empty chair, to the determined malice in Tanya's eyes, to the quiet, rhythmic threat of the floor. The problem wasn't what was outside. It was what was sealed in here with us — Tanya, the fear, and the rapidly shrinking air. I had to find a way to stop the rhythm, or we wouldn't last the night.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 3 ══════════════════ -->
+<section class="chapter" id="ch3">
+  <div class="chapter-header" data-chapter="Chapter III">
+    <div class="chapter-title-text">The Air Turns Heavy</div>
+  </div>
+
+  <p>The air did not just turn heavy; it turned hostile. It was no longer a silent thief — it was a physical weight, pressing against my temples, slowing my thoughts into sluggish, muddy movements. The dawn that crept through the curtains was a pale, sickening orange, and it illuminated a group that was visibly suffering. We had survived the first night, but survival felt like an insult.</p>
+  <p>Every single person in the room — myself included — was a liability now. The symptoms of CO₂ buildup were progressing exactly as expected: persistent headache behind the eyes, deepening nausea, difficulty concentrating, and a creeping lethargy in the limbs. The oxygen in our sealed room hadn't disappeared — not yet — but the CO₂ we exhaled had nowhere to go, and at high enough concentrations it was just as lethal as any external pathogen. We had become our own slow poison.</p>
+  <p>Sid, still crumpled against the wall, was the worst casualty of our degrading air supply. His larger muscle mass demanded more oxygen and expelled more CO₂ with every breath, even at rest. His face was flushed from the effort of breathing against the rising carbon dioxide load, and his breaths were shallow and fast — a biological attempt to compensate that only accelerated the problem by cycling through the toxic air faster. He looked less like a protective presence and more like a massive, struggling engine running on fumes. The shame of his inaction over Arjun was a psychological weight that compounded his physical distress, reducing the group's strongest physical asset into its biggest metabolic drain.</p>
+  <p>Tanya, despite her claimed fragility, seemed unnaturally composed, which only amplified my distrust. She sat in her corner, rigid, eyes flicking between me and Siddharth. She was rationing her fear and her energy, using silence as a weapon and observation as a shield. She looked like a taut bowstring, waiting for the perfect moment to release.</p>
+  <p>Mr. Dev tried to break the psychological silence with logic, his voice thick and slow, the words fighting their way through the haze clouding his mind. "We should designate a breathing rhythm. Inhale steadily… exhale slowly. Control the rate. Discipline is breathing in rhythm with fear."</p>
+  <p>We attempted it. Six people trying to breathe in sync was a terrifying ballet of desperation, each participant acutely aware that their neighbours' exhaled breath shortened their own usable time. It lasted exactly three forced, laboured cycles before Ishani gasped, unable to maintain the artificial pace, and Siddharth coughed violently, a ragged, chest-wracking sound that made everyone flinch. The silence rushed back in, now infused with the ragged reality of our physical limits.</p>
+  <p>I pressed my fingers against my eyelids, desperately trying to restart my logic circuit. I needed a clear input. I needed data. The <span class="sound">thrum... hiss...</span> rhythm from the floor was still there, constant, like the pulse of something buried and patient beneath the foundations of the world.</p>
+  <p>"That sound," I mumbled, the words feeling heavy in my mouth. "It's continuous. It's too regular to be structural. It's mechanical. It's too low for a standard HVAC cycle. And it's coming up through the floor tiles specifically."</p>
+  <p>Tanya immediately dismissed it with a tired wave of her hand. "It's the school settling. The old vents collapsing. It's irrelevant. We should talk about rations. Focus on the food and water, not an echo."</p>
+  <p>"The sound may be removing air volume from this room," I countered, managing to inject a sliver of my usual sharpness, fighting the urge to vomit. "If it's actively pulling our air downward, that makes it the most immediate threat on the table — more urgent than the food you're worried about. We don't have time for a power struggle. We have a calculation problem."</p>
+  <p>My defiance earned a slow, cold smile from her. "You can't ration air that doesn't exist."</p>
+  <p>The tension was a physical pressure, heavier than the CO₂. It was broken, predictably, by Aarav.</p>
+  <p>He wasn't crying now but was lost in a frenzy of focused observation. He was tapping his fingers on the floor, not in time with the sound but slightly off — counting. He started mumbling, fast and technical, the words blurring together. His body was curled into a protective ball, but his mind was running at impossible speed.</p>
+  <p>"It's not settling! It's not collapsing! The frequency… the period of the hiss is half the period of the thrum — <span class="sound">T<sub>hiss</sub> = T<sub>thrum</sub> / 2</span>. The duty cycle is wrong. That's not a mechanical failure; that's a deliberate override."</p>
+  <p>We all stared at him. Aarav, the boy who cried when he couldn't find his favourite pen, was calculating complex mechanical signatures in a CO₂-fogged delirium.</p>
+  <p>Mr. Dev, a Computer Science teacher who recognised the technical language immediately, snapped out of his own haze. "Aarav, what is a duty cycle? Speak clearly. Where does that sound originate?"</p>
+  <p>Aarav didn't look at him. He scrambled to his hands and knees, dragging himself toward the back corner of the room, adjacent to the sealed classroom door. His movements were jerky and uncoordinated, driven not by his muscles but by the frantic technical compulsion in his brain.</p>
+  <p>"It's the old HVAC system," he mumbled, his forehead resting against the cool of the steel door, almost reverently. "It was decommissioned in 2018. It only ever ran in emergency bio-isolation mode… and that mode was linked to the Level B Chemistry Lab's main filtration unit in the basement."</p>
+  <p>"The normal ventilation hums at a steady rate," Aarav continued, his voice rising to a frantic pitch. "The <span class="sound">T<sub>hiss</sub> = T<sub>thrum</sub> / 2</span> signature is the vacuum cycle. It's not pushing air; it's actively pulling it out of the sealed areas and directing it somewhere below. Filtering it. Containing the contamination."</p>
+  <p>The realization hit me like a physical blow, stripping away the last illusion of safety. We hadn't just sealed ourselves in the room; we had sealed ourselves into an experiment, and the machine was actively extracting our air. Our Time-To-Dangerous calculation was wrong by an enormous margin — the room's air was bleeding out below us, not just accumulating CO₂.</p>
+  <p>"It's a controlled, calculated theft," I whispered, the words catching in my dry throat. "Not a leak. It's redirecting air from sealed rooms — including ours — to a different, pressurised location."</p>
+  <p>I immediately went to my phone to find the schematic for the old HVAC system, but the battery was entirely dead now. The logic loop was severed; I could no longer rely on external data.</p>
+  <p>"We have to stop it," I declared, looking at the section of linoleum tile Aarav was pointing at. "It's pulling from directly beneath here."</p>
+  <p>Siddharth finally stirred, pulling himself up using the wall. The movement was visibly painful, his face contorted in a mix of grief and extreme physical effort. He looked at me, then at the floor. His eyes, still red-rimmed, held a flicker of his old courage — a desperate need for redemption.</p>
+  <p>"I'll lift the tiles," Sid rasped, his voice raw. "Tell me what to do."</p>
+  <p>Mr. Dev quickly located a heavy, metal-plated dictionary — a remnant of a physical reference library now long obsolete — and handed it to Sid. Sid didn't speak. He just gripped the book like a hammer, the debt in his eyes driving him forward.</p>
+  <p>It took all of his remaining strength. The seal was old and stubborn. Sid leveraged the spine of the dictionary into a hairline crack in the floor, and with a guttural grunt, wrenched a tile upward. The sound of ceramic tearing away from concrete was loud in the suffocating silence.</p>
+  <p>A gust of air rushed upward. It wasn't clean air, but it wasn't the metallic rot of the hallway either. It was stale, cold, and heavy with moisture, carrying a faint chemical scent of ethanol and something metallic. The rush lasted only a second before the <span class="sound">thrum... hiss...</span> sound intensified dramatically — the pump sensing the sudden pressure change.</p>
+  <p>Sid backed away, coughing violently, the cold burst of dense, stale air having irritated his already-stressed airways.</p>
+  <p>I immediately crouched down, ignoring the burning sensation in my lungs, and peered into the dark void revealed by the missing tile. It wasn't a utility tunnel; it was a ventilation shaft — a deep, narrow rectangular duct designed for cable runs or auxiliary piping.</p>
+  <p>And in the centre of the shaft, I saw it: a thick, black hose, reinforced with steel mesh, running vertically downward into the darkness. Attached to the hose, secured near the surface, was a small, high-powered induction pump — the source of the rhythmic <span class="sound">thrum... hiss...</span> The pump was compact, portable, and looked expensive. Not school property.</p>
+  <p>"It's not the school's," I hissed. "Someone installed this recently. It's actively pulling air from this room down into the building."</p>
+  <p>Tanya, seeing the clear target, immediately grabbed a pair of rusted scissors from Mr. Dev's desk. She knelt down, reaching toward the power cord visible at the shaft's edge. "I'll cut the wire — we can stop it right now."</p>
+  <p>"WAIT!" I shouted, pushing her hand away just as the scissors touched the cord. "Don't touch it! What if cutting the power triggers a countermeasure — a pressure release, a flood valve? Whoever installed this wouldn't leave an accessible power cord without designing for exactly this response. Cutting that wire could kill us faster than the pump."</p>
+  <p>My anxiety, usually a burden, was a safety harness now. I needed to disable the mechanism itself, not its power supply.</p>
+  <p>"Sid, you're the strongest. You need to physically pull that pump free of the shaft housing. Use the dictionary's spine as a lever — don't cut, don't smash, just break the suction seal."</p>
+  <p>Sid took a deep, deliberate breath. He grabbed the dictionary and lowered himself to the floor, positioning his body strategically to partially cover the hole — momentarily slowing the air bleed. The moment his hands touched the pump's cool, slick casing, the <span class="sound">thrum... hiss...</span> stopped abruptly.</p>
+  <p>Silence. The kind that was heavy with anticipation.</p>
+  <p>"He's blocking the intake with his body mass," I explained to the others. "Pull it free, Sid. <strong>Now.</strong>"</p>
+  <p>Sid began to haul, muscles straining against the pump's magnetic seals. He grunted, his face turning red with exertion.</p>
+  <p><strong>Crack.</strong></p>
+  <p>The sound was not the pump yielding. It was the tile next to the one Sid had removed, splintering under his weight.</p>
+  <p>And the silence was broken not by the pump, but by a sound from the wall — from the sealed-off classroom next door. A slow, scraping cough. The cough was followed by a wet, deliberate drag, the sound of something heavy being pulled slowly across the floor.</p>
+  <p>Everyone froze. Sid's hands were still clamped around the pump, his face inches from the hole.</p>
+  <p>Tanya's eyes darted from the open shaft to the dividing wall, her fear-driven instinct absolute. "They're still in there," Tanya hissed. "They're contaminated. Sid, finish with the pump! Seal that hole now! They're coming for our air!"</p>
+  <p>The scraping continued, moving closer to the thin wall separating us from the source of the contamination. <span class="sound">thrum... hiss...</span> The pump, partially dislodged, began to fight Sid's grip again.</p>
+  <p>My mind filtered the inputs. Threat A: the pump — certain death by slow air extraction. Threat B: the wall — a contained threat, for now.</p>
+  <p>"Sid," I commanded, my voice sharp, cutting through the noise. "Get. The. Pump. Out. Now. Aarav, Tanya — use the desks. Barricade that dividing wall. Not the door — the wall. Spread the pressure across as much surface area as possible."</p>
+  <p>Tanya shrieked. "Are you insane?! The wall is thinner! The door is steel!"</p>
+  <p>"The door is sealed and reinforced! The wall is brittle plaster over hollow cavity! If they breach, it'll be through the wall! Barricade it!"</p>
+  <p>Sid gave one final, monstrous heave. With a wrenching, metallic shriek, the induction pump tore free of its housing, the reinforced hose snapping back like a whip and coiling violently into the shaft. Sid crashed back onto the floor, the pump clattering beside him, instantly silent.</p>
+  <p>The air in the room, relieved of the active suction, felt thicker, more still. We had bought perhaps a few hours. But the moment the pump was silenced, the scraping on the other side of the wall stopped.</p>
+  <p>And then, a single, deliberate knock came from the wall — right where the desks were being pushed into place.</p>
+  <p class="pull-quote"><span class="sound">Knock.</span></p>
+  <p>It was solid. Measured. And human.</p>
+  <p>Mr. Dev stepped back, his face white. "The Knockers," he whispered, the name dredging up old, half-forgotten disaster drills. "They're still inside. And they know we're here."</p>
+  <p>We had stopped the air thief, but the cost was a new, direct confrontation with whatever lay beyond the wall — and an internal predator who had just watched me successfully overrule her. The fragile equilibrium of fear and authority had completely shattered.</p>
+  <p>"We need to go to the basement," I stated, pulling myself to my feet. "The pump is disabled, but the bio-isolation cycle will continue without it — it'll find another pathway. Aarav, you said the override panel is in the old Chemistry Lab, Level B."</p>
+  <p>Aarav, shaking but resolute, nodded. "I know the physical location. I used to hide near the maintenance ducts by the lab. I can lead us through the secondary access shaft."</p>
+  <p>I looked at the others. There was no version of this where anyone was safe staying behind — not with the wall compromised, not with Tanya unguarded near the supplies, not with Mr. Dev beginning to fold at the edges. We went together, or not at all.</p>
+  <p>"We all go," I said. "We take everything. Nobody stays."</p>
+  <p>I retrieved the few items we had — a small, weak torch, the heavy wrench, and a single half-empty bottle of disinfectant. I looked at Aarav, who was already scrambling toward the barricaded door, his body fuelled by frantic, fragile brilliance.</p>
+  <p>As I cracked the barricaded door open — releasing the faint smell of the corridor into the room — the rhythmic <span class="sound">thrum... hiss...</span> intensified once more, a final spiteful burst as the disconnected system somewhere below tried to reassert itself. It was no longer a background sound. It was a countdown. The true test was finally beginning.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 4 ══════════════════ -->
+<section class="chapter" id="ch4">
+  <div class="chapter-header" data-chapter="Chapter IV">
+    <div class="chapter-title-text">Hollow Floors</div>
+  </div>
+
+  <p>The silence lasted only a breath — a taut moment of false safety — before the crack of the adjacent linoleum tile fractured everything.</p>
+  <p>It was not the sound of the pump yielding. It was not the sound of metal or pipework. It was a sound far more intimate and terrifying: a high-pitched, desperate squeak, followed instantly by a frantic, rhythmic scuttling noise directly beneath the splintered floor.</p>
+  <p>Siddharth recoiled instantly, his massive shoulders hitting the back wall with a thud that shook the windows. His face, already flushed from CO₂ stress, was now ghastly pale. He had been prepared to fight a machine or a wire, but this was something biological and alive in the dark.</p>
+  <p>"What was that?" Tanya shrieked from her corner, her voice sharp with pure, unfiltered panic. For the first time, her fear wasn't about manipulating the group; it was about an external, uncontrollable threat.</p>
+  <p>I barely registered her. My focus narrowed instantly onto the gap. The crack in the floor, combined with the removed tile, created a wide fissure into the void below. A cold, pure curiosity — the most honest expression of my logic — pushed me forward, forcing me to ignore the dizziness and the pounding pressure behind my eyes.</p>
+  <p>"Sid, stay still," I ordered, kneeling right at the edge of the opening. "You're partially blocking the shaft. Don't move until I know what we're dealing with."</p>
+  <p>The pump's rhythmic suction had stopped — silenced by the pressure of Siddharth's body — but the shaft below remained open, drawing the room's moisture and residual air pressure, creating a faint, whistling draft.</p>
+  <p>I peered down into the darkness. And then I saw it.</p>
+  <p>It moved in a silent, dazzling streak of white through the black of the vent shaft. It was small, impossibly quick, and possessed of a blindingly bright coat of fur that stood out like a flaw in the darkness.</p>
+  <p><strong>Nox.</strong></p>
+  <p>The albino rat. The one Mr. Dev had mentioned in passing weeks ago — a creature rumoured to have been living in the Level B Chemistry Lab storage, an old lab mascot that no one had bothered to remove when the lab was sealed. It didn't look like a scavenger. It looked pristine. Its white fur was clean and bright; its movements were swift and assured. It paused momentarily at the base of the shaft, twitching its pink nose, then — with an effortless leap — it scampered up the corrugated metal side of the air hose, running directly over Sid's hand.</p>
+  <p>Sid let out a strangled yelp, pulling his hand away as if burned. The sudden movement dislodged the pump. With a heavy <strong>CLANG</strong>, the induction pump tumbled from the vent shaft, landing on the floor and scattering dust and debris.</p>
+  <p>The silence that followed was total. The rhythmic <span class="sound">thrum... hiss...</span> was gone. The suction had stopped.</p>
+  <p>I leaned over the hole, watching the white blur vanish deeper into the piping below, leaving behind a faint, sharp odour — not of bleach or rot, but something clean. Ozone. Freshly circulated air.</p>
+  <p>"A rat," Mr. Dev whispered, leaning against the chalkboard, relief warring with revulsion in his eyes. "We were saved by a mascot."</p>
+  <p>"No," I corrected, pulling back, my mind accelerating. "Look at it. White and clean — no dulled coat, no laboured breathing, no signs of the cognitive impairment we're all experiencing from the CO₂. It's been living in this ventilation system and it's biologically unaffected. That rat is not a mascot. It is <em>data</em>. And that data links directly to the Level B Chemistry Lab."</p>
+  <p>Tanya immediately got up, her fear rapidly morphing back into aggressive calculation. "If there's a rat, it means there's food nearby. It means the pipe leads somewhere we can get supplies."</p>
+  <p>"It means the air down there is breathable," I snapped, pointing to the thick black hose dangling into the void. "This pump was designed to steal our air and send it down to the lab. We weren't just waiting to die from CO₂ buildup — we were a controlled experiment in environmental depletion. Someone installed this device intentionally."</p>
+  <p>I felt a new kind of terror: the terror of being intellectually exploited.</p>
+  <p>Ishani, who had been silent, her hands still trembling from cleaning, spoke softly. "But if the pump is off, our air stops being stolen. We should rest and recalibrate."</p>
+  <p>"Wrong," I said, pointing to the exposed floor vent. "The moment Sid pulled the pump, he opened the shaft both ways. It's no longer a one-way extraction system. Whatever is down there can now come up."</p>
+  <p>And as if on cue, a new sound began. It wasn't mechanical. It wasn't a squeak. It was a faint, low sound travelling through the concrete slab itself — vibrating up into the hollow space beneath the floor.</p>
+  <p class="pull-quote"><span class="sound">Tap. Tap-tap. Tap.</span></p>
+  <p>Rhythmic. Intelligent. Utterly unnerving. It was exactly the sound a human knuckle makes against a hard surface, but coming from the darkness beneath our feet. It paused. Then continued, moving slightly, as if testing the integrity of the floor around the exposed hole.</p>
+  <p>Aarav let out a choking gasp. "It's responding! It heard us! That's not the building — that's <em>them!</em>"</p>
+  <p>The Knockers.</p>
+  <p>Mr. Dev's hope finally failed him. His face went entirely blank. He didn't reach for a joke, a distraction, or a tactical solution. He just stared at the floor — the empty, terrifying reality settling over him like sediment. The silence I had logged as his true breaking point arrived.</p>
+  <p>"We need to seal the hole," Tanya demanded, scrambling toward the discarded floor tile. "Now! Before they find the opening!"</p>
+  <p>"No," I cut her off, my logic having processed the new inputs. <em>Vacuum stopped. Knockers activated. Location of clean air confirmed.</em></p>
+  <p>"The pump was stealing our air, but it was also masking the sound we were generating. Now that it's off, they know we're here, and they know the floor is compromised. We have to move. We have to go down."</p>
+  <p>I grabbed the thick black hose leading into the shaft. It was cold, slick, and surprisingly firmly anchored to the vent housing.</p>
+  <p>"This hose leads to the clean air," I stated, pulling on it. "It leads to the lab. We don't wait to suffocate, and we don't wait for them to come up. We go down."</p>
+  <p>But as Sid reached for the hose, a new sound came from the shaft. The <span class="sound">Tap. Tap-tap. Tap.</span> pattern — but this time followed by a chillingly accurate imitation.</p>
+  <p>A wet, choked cough.</p>
+  <p>It was Arjun's cough. Or the sound of what had killed him. The Knockers were using our guilt as a weapon.</p>
+  <p>Tanya screamed — a high, panicked sound that instantly cost the room a volume of air we couldn't afford.</p>
+  <p>I looked directly at Tanya, my expression colder than the air hose I was gripping. My voice was dangerously level.</p>
+  <p>"We were seven," I stated. "Six of us are alive. One is gone. And there are two kinds of rats in this building — one small and white, one large and frightened. We have to move. Now."</p>
+  <p>The implication hung in the heavy air: Nox was the small, scientific anomaly. Tanya was the large, human inconvenience.</p>
+  <p>I grabbed a discarded notebook and jotted down a rapid inventory and a plan for the descent, mapping what we knew of the space using the hose as our only guaranteed path downward.</p>
+  <p>"Mr. Dev," I said sharply. "Anchor the hose. You know this building's systems. We need you below as much as above. We all go."</p>
+  <p>Mr. Dev finally stirred. The sheer audacity of my leadership — the cold, calculated pragmatism of it — seemed to snap him out of his paralysis. He recognised that this ruthlessness, though ugly, was the group's only remaining viable option.</p>
+  <p>The hollow floors were now the door. The only way out of the classroom was through the hole in the ground, following the hose into the unknown.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 5 ══════════════════ -->
+<section class="chapter" id="ch5">
+  <div class="chapter-header" data-chapter="Chapter V">
+    <div class="chapter-title-text">The Rules of Breathing</div>
+  </div>
+
+  <p>I didn't wait for permission or consensus. The moment I delivered the verdict — six of us alive, one gone, two kinds of rats — the hierarchy shifted. Tanya's panic and Mr. Dev's paralysis were irrelevant. The floor was breached, the threat was activated, and the countdown was absolute. My body, driven by a purely cold logic, moved to secure the descent.</p>
+  <p>First, the anchor. The massive desk belonging to Mr. Dev was our immovable object. I grabbed the fallen induction pump and used its sharp, jagged metal casing to score and grip the thick black hose, then leveraged the heavy, metal-plated dictionary — the one Sid had used to smash the tiles — and jammed the reinforced hose end around the thickest leg of the desk, hammering the sharp metal corner of the dictionary spine repeatedly against the connection until the hose was irrevocably mashed and secured to the wood. It was ugly, violent engineering, but the hose held firm — a taut line into the dark.</p>
+  <p>"Mr. Dev," I commanded, turning to the teacher. He was still standing, but his eyes were vacant, fixed on the floor where Arjun's glasses rested. "You anchor the desk. You are the heaviest among us. Brace yourself against the wall. We need every Newton of downward force on that anchor."</p>
+  <p>"The hose is the data line to breathable air," I stated, injecting a scientific urgency into the instruction. "Anchor the data line, or we all become carbon. Focus on the friction coefficient, not the funeral."</p>
+  <p>The cold, quantifying language worked. Mr. Dev blinked, his gaze snapping from the glasses to the problem. He nodded slowly, his hands regaining their purpose.</p>
+
+  <p class="section-head">The Descent Order</p>
+
+  <p>"Sid, you go first. Your size is our greatest metabolic cost in the classroom, but it's our structural advantage in the shaft. You clear any debris, test the walls, and signal the moment you reach the bottom. Your courage faltered up here, but it is needed below. Go, and spend it well."</p>
+  <p>Sid, still shaking, seemed to grasp the opportunity for atonement. He took a shallow breath, wrapped a strip of torn shirt around his bleeding knuckles, and lowered himself into the dark hole.</p>
+  <p>"Ishani, you follow Sid. Maintain two body lengths above him at all times. Your job is stability — you are the emotional anchor, and you will manage the pace. No talking unless critical. Every breath is rationed. You are the space between the protector and the strategist."</p>
+  <p>Ishani nodded, her pale face composed. Her role was simple, yet crucial: hold the line between sheer panic and forward momentum.</p>
+  <p>"I go third. I carry the supplies and the remaining masks. I set the rhythm and relay communication from Sid."</p>
+  <p>"Aarav, you go fourth. Keep listening. Everything you hear becomes useful eventually." Aarav swallowed hard and nodded, his glasses slightly askew.</p>
+  <p>Tanya bristled, her voice a raw whisper. "I should be last. I need a clear path."</p>
+  <p>"You are last," I countered, stating the calculated fact. "You are the weakest climber and the most volatile under pressure. You will keep moving. If you cut the hose, you kill the five people below you, who are your only shield from the Knockers right now. You hold the line, Tanya."</p>
+  <p>Mr. Dev anchors until everyone is through, then follows. His weight and grip are the final safety margin. The plan was brutal, efficient, and left no room for sentiment.</p>
+
+  <p class="section-head">The Vertical Coffin</p>
+
+  <p>I followed Ishani into the hole. The air in the shaft was immediately colder and heavier than the classroom air, thick with moisture and a metallic dust that coated the back of the throat. It tasted of old chemicals and deep stagnation.</p>
+  <p>The shaft was terrifyingly narrow — a vertical coffin. It was designed for cables and maintenance runs, not for human beings. Sid's massive frame already consumed nearly all the available width below me. The descent was a series of painful scrapes, forced adjustments, and agonising muscle stretches on weakened, oxygen-deprived limbs.</p>
+  <p>The rule was simple: <em>Slow Inhale. Slower Exhale. Silent.</em></p>
+  <p>This was the Rule of Breathing. Every grunt, every adjustment of grip, every misplaced foot scraped against the metal — each sound broadcast our precise location directly to the Knockers through the building's structure.</p>
+  <p>Below me, I could hear Ishani maintaining a careful, almost silent pace. Above, I could hear Aarav's controlled breathing, being quietly managed by his own will now — the panic converted into concentration, the way it always was once he found a problem large enough to absorb it entirely.</p>
+  <p>After several metres of agonising descent, the strain on our muscles — starved of proper oxygenation and loaded with lactic acid — became unbearable. The shaft was slick, and the hose, though thick, chafed raw against my hands. I risked a low whisper to the darkness below.</p>
+  <p>"Sid. Report."</p>
+  <p>A muffled grunt came back up the shaft. "Metal casing. No horizontal path yet. Still going… deeper."</p>
+  <p>The hose was running deep. We were sinking into the unknown architecture of the campus basement.</p>
+  <p>It was then that the first disruption occurred — predictable and violent. Tanya.</p>
+  <p>She was the last to descend, fuelled only by the terror of being left behind with the Knockers. Her uncontrolled recklessness in the classroom had become raw, explosive panic in the dark.</p>
+  <p>"STOP!" Tanya shrieked from the opening above, the sound ricocheting sickeningly off the metal walls. "I can't hold the hose! It's too tight! Slow down, you're pulling too fast!"</p>
+  <p>Her shriek was an emergency flare — announcing our position to everything in the building. A measurable volume of breathable air, wasted on hysteria.</p>
+  <p>"Tanya, if you panic, you die first," I yelled up the shaft, pressing my body against the wall to conserve energy. "Ishani, slow your pace. Tanya, stop moving. You have to stabilise."</p>
+  <p>"I'm slipping! I can't breathe down here! I'm letting go! I swear I'll cut the line!" she screamed, her voice cracking.</p>
+  <p>She didn't have a knife, but the threat was enough. Sid, hearing the panic and the implied threat to the hose — his last chance at redemption — immediately froze. Ishani, caught between the two, also stalled. We were suspended: five lives hanging by a single reinforced hose, the lifeline controlled by the most unstable person in the group.</p>
+  <p>"Tanya," I whispered, injecting every ounce of cold authority into my voice. "You cut the hose, you die slower. You will fall into the shaft, and when the Knockers find the hole, they will come for you first. Your survival is tethered to ours. Do not make yourself a casualty of your own incompetence."</p>
+  <p>A tense, shallow gasp. The threat of being found first by the Knockers was greater than the fear of falling.</p>
+
+  <p class="section-head">Contact</p>
+
+  <p>The descent resumed — slower now, forced into a painfully deliberate rhythm. The air grew increasingly stale, and my vision blurred at the edges. The CO₂ down here wasn't yet lethal, but it was elevated; every exhale stayed with us in the narrow column.</p>
+  <p>Then, from far below, the Knockers responded to Tanya's scream. The sound was no longer a distant tap; it was a rhythmic, scratching pattern travelling through the metal itself, vibrating up the hose and into my grip.</p>
+  <p class="pull-quote"><span class="sound">Tap-tap-tap. Scratch. Tap-tap-tap. Scratch.</span></p>
+  <p>Sid stopped abruptly, body locked in place. "Report, Sid!" I whispered.</p>
+  <p>"Bottom," he rasped, his voice raw with fear and effort. "The hose turns. Goes horizontal into a small, sealed, concrete service tunnel. But I can't get in. The entrance is too narrow. It's sealed with rust."</p>
+  <p>"And the tapping?" I asked, dread coiling in my stomach.</p>
+  <p>"It's beneath the tunnel floor. It's moving to intercept. It's… close."</p>
+  <p>And then, the moment of contact. Sid's body tensed violently. He let out a low, guttural sound — not pain, but pure revulsion.</p>
+  <p>"Something touched me," he whispered, the words shaking. "Something wet and slick. It's climbing up the inside of the shaft wall."</p>
+  <p>He tried to climb higher, but his massive shoulders wedged in the narrow opening. He was stuck — immobilised by the very space he was supposed to clear.</p>
+  <p class="pull-quote"><span class="sound">S — C — R — A — P — E.</span></p>
+  <p>The sound was right at his ankle, amplified by the metallic echo.</p>
+  <p>Then the final, terrifying noise. Not a tap, not a cough, not a scratch. A faint, high-pitched squeak — instantly followed by the distinct sound of a knuckle knocking. A rhythmic <span class="sound">Tap. Tap-tap. Tap.</span> Right where Sid's foot rested on the metal floor of the tunnel entrance.</p>
+  <p>Nox. And the Knockers. Converging at the same exit point.</p>
+  <p>I needed to free Sid. The supply bag was the problem — its weight and bulk pressed against his back, pinning his movement in the narrow shaft. The highest-risk calculation of the night: losing the supplies meant slow, certain death, but being trapped meant an immediate one.</p>
+  <p>"Sid. Drop the bag. I'll catch it. Both hands. Break that tunnel seal now."</p>
+  <p>Sid understood the finality. With a strangled grunt, he shoved the small supply bag downward. I caught it awkwardly against my chest, the clatter of bottles echoing loudly in the shaft — a terrifying advertisement of our position.</p>
+  <p>Freeing both hands, Sid leveraged his body. He slammed the heavy dictionary spine against the service tunnel entrance.</p>
+  <p class="pull-quote"><span class="sound">CRACK. CRUNCH. RUSTLE.</span></p>
+  <p>The sound was deafening, amplified by the steel walls. The rusty seal shattered. A plume of dust and old, stale air — thick with the metallic scent of long-sealed chemistry — burst from the tunnel entrance, momentarily blinding Sid.</p>
+  <p>He didn't hesitate. With a final, desperate yell, he used the last of his strength to ram his shoulder against the opening. He vanished into the horizontal tunnel. He was through.</p>
+  <p>From the dark opening, Sid's voice came back, desperate but commanding. "Ishani! Now! Grab my hand!"</p>
+  <p>Ishani scrambled forward and was pulled into the tunnel. I moved immediately to fill the gap, reaching forward and gripping Sid's arm, pulled hard into the tight horizontal space.</p>
+  <p>I immediately turned back, placing my body across the threshold to manage the remaining entry. "Aarav! Tanya! Move! We're exposed!"</p>
+  <p>Aarav came through with the controlled efficiency of someone converting terror into pure motion. Tanya, motivated by the visible brutality of the shaft and the fear of being last, clawed her way forward and I grabbed her, helping Sid pull her through. Mr. Dev came last, his anchor function complete. The moment his feet cleared the shaft, the structure shifted slightly, the hose going slack and loose beneath us. The classroom above was now severed from the descent.</p>
+  <p>They were all in. "Move," I said. Not a command this time. A fact.</p>
+
+  <p class="section-head">The Tunnel</p>
+
+  <p>We were now in a small, cramped service tunnel — barely tall enough to crouch in, only wide enough for one person at a time. The air here was marginally better: stagnant and cold, preserved by the old concrete, but the CO₂ was lower than the sealed classroom had been. The relief was modest. We were still dying; just slightly slower.</p>
+  <p>The tunnel was illuminated by a single, failing fluorescent tube that flickered violently, bathing everything in a sickly, pulsating green-white glow. The tube buzzed with a sound almost as unnerving as the Knockers' taps, casting long, jittery shadows that made the cramped space feel dangerously unpredictable.</p>
+  <p>The Knockers reacted instantly to the noise of the breach. The tapping intensified, now sounding like a frantic attempt to claw through the concrete floor directly beneath the tunnel.</p>
+  <p>"We have to seal the entrance!" Tanya wailed.</p>
+  <p>"No time," I commanded, dragging the debris into position behind us. "The sound is below — they can't easily come up through solid concrete. Sid, forward. Clear the path. Ishani, behind him. Do not look back."</p>
+  <p>I forced the others to halt just as we passed a cluster of thick, sweating water pipes. "Rations now," I stated. "One small portion of food per person. One measured sip of water each. Sid, you get a larger sip — you just burned the most energy of anyone and your body is the most physically stressed. Your muscles need the hydration to keep working for us."</p>
+  <p>Tanya immediately protested. "That's not fair! He gets more water! I haven't had a full breath since last night!"</p>
+  <p>"Fairness is irrelevant," I stated, my voice low and cutting. "Survival is arithmetic. Sid just exerted extraordinary physical effort on behalf of all of us. His muscles are in oxygen debt. He requires proportionally more hydration to remain functional — because his function is what keeps the path ahead of us open. You get less not as a punishment, but because the math demands it. Accept the equation, or I will leave you behind to explain it to the Knockers."</p>
+  <p>The logic, presented as irrefutable law, was inescapable. Tanya shrank back, defeated. The threat of abandonment was her greatest fear, and it was palpable and absolute.</p>
+
+  <p class="section-head">The First Glimpse</p>
+
+  <p>We moved deeper into the campus basement, following the hose as it snaked through a maze of pipes and old wiring. The air was becoming increasingly humid and acrid, smelling faintly of sulphur and something sharp, like heated metal. We were close to the Level B Chemistry Lab. The atmosphere itself was a warning.</p>
+  <p>Then the tunnel opened slightly, allowing us to stand almost upright in a narrow, forgotten corridor. Here, the fluorescents were slightly more stable, casting a cleaner — if still sickly — light. And here, we found the first visual proof of the apocalypse.</p>
+  <p>Lying slumped against a wall of massive, sweating water pipes was a body. An older student in a lab coat. He was not seized, not convulsing — he was still. His face was a mask of utter peace, his hand resting beside a small, silver object that looked like a custom-made personal air filtration unit, now dark and silent.</p>
+  <p>He had died with the mask off. The cause of death was not violence, but a quiet surrender to hypoxia — a final, peaceful exhaustion after the filtration unit had failed and the air around him had simply run out of usable oxygen. There was no pathogen damage visible on his body; the contamination that had killed the floors above had not reached him here. He had simply run out of time.</p>
+  <p>Ishani gasped, pressing her hands to her mouth to stifle the sound. Aarav turned his face quickly to Mr. Dev's side.</p>
+  <p>"Don't touch anything," I commanded. "Maintain sterile distance."</p>
+  <p>But as I said the words, my eyes went to the body's lab coat. Stitched near the collar was a small, ornate logo, followed by a name: <strong>K. ARJUN.</strong></p>
+  <p>This was the researcher. The namesake of our dead comrade. He was the engineer who had managed the airflow in this building — and almost certainly the one who had installed the induction pump in our classroom floor. The designer of our coffin.</p>
+  <p>I approached the body carefully. I bent down and took the small, metallic silver device from his hand. It wasn't a standard filter. It was a key — heavy, complex, and clearly proprietary.</p>
+  <p>The moment I grasped the device, the environment shifted. The distant, frantic scraping of the Knockers stopped, as if a switch had been thrown.</p>
+  <p>And then a new sound came — low, melodic, distant, coming from deeper within the corridors. Music. Not tapping, not shrieking, but the sound of an old, slightly warped classical piano piece, played in a slow, mournful tempo.</p>
+  <p>This was not warfare. This was luring. The Knockers had stopped chasing and started guiding.</p>
+  <p>The group looked at me, fear and exhaustion etched into their faces, waiting for the next calculated move. The tunnel had led us to a body, a potential key, and a musical invitation. We had escaped the vertical shaft, but we had walked directly into the lair.</p>
+  <p>"We proceed," I stated, clutching the silver key. "We follow the air… and we follow the music."</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 6 ══════════════════ -->
+<section class="chapter" id="ch6">
+  <div class="chapter-header" data-chapter="Chapter VI">
+    <div class="chapter-title-text">Under the Fluorescents</div>
+  </div>
+
+  <p>I gripped the silver key, the cold metal an anchor against the surging paranoia the music inspired. The Chopin Nocturne that had greeted us was gone, replaced by the infinitely more familiar, yet now deeply desecrated, sound of Debussy's Clair de Lune. The melody, usually synonymous with peace, was warped by the basement's structure — resonating through concrete and steel until it became something hollow and threatening.</p>
+  <p>"The music is a lure," I stated, my voice low and dry. "But it's more than that. It's their sensory net. They're using the acoustic feedback of our movements to track us through the pipes."</p>
+  <p>Sid, rubbing the raw abrasion on his shoulder from the tunnel breach, scanned the network of rusted utility lines running overhead. "If we stop, the music keeps playing. They won't know if we're standing still or moving."</p>
+  <p>"Wrong," I snapped. "They are monitoring the absence of acoustic feedback. Standing still is waiting for them to triangulate the silence. We have to move — but we have to become acoustically invisible while doing it."</p>
+  <p>I immediately instituted the rule of movement: The Silent Crawl. We could no longer walk upright. We had to move in a low, sidling crouch, maintaining physical contact with the dense concrete walls to dampen our vibrations rather than transmitting them through the floor. We also had to remove our shoes. The thin rubber soles were near-perfect conductors of sound against bare concrete. Bare skin, though painful on the cold, chemical-residue floor, offered marginally better dampening.</p>
+  <p>Ishani followed the order instantly. Tanya looked down at the floor, coated in a mix of chemical residue and moisture. "I am not putting my bare feet on that floor. It's contaminated."</p>
+  <p>"The pathogen is airborne," I stated. "The floor is an irritant. The Knockers are lethal. You touch the floor or you attract them. They hear your shoes. Your choice."</p>
+  <p>She began to remove her shoes, hands trembling. Her resentment was a physical heat in the cold air, but the undeniable logic of immediate survival was a greater force than her vanity.</p>
+  <p>Mr. Dev watched me, his gaze analytical. He was not just following; he was observing the experiment in survival that I had become.</p>
+  <p>Aarav, huddled near Mr. Dev, wasn't focused on the floor. His eyes darted nervously between the walls and the massive, sweating steam pipes overhead. "The frequency is wrong," he rasped suddenly, his voice tight with revelation. "It's not warped by a bad recording. Clair de Lune is typically performed at A4 — 440 Hz — but the pipes are old, varying in thickness and pressure. The sound should distort, shift pitch. It shouldn't be this flat and consistent."</p>
+  <p>I looked at him, recognising the moment when his fear flowed into pure, unfiltered genius. "Explains the artificial conductivity."</p>
+  <p>"It's not a speaker system," he said, his voice rising just enough to carry before I silenced him with a look. He lowered it again, urgent and precise. "They're not using wires for the sound. They are using the pressure waves in the pipes themselves — steam, water, ventilation. The whole structure is a massive, resonating eardrum. They're not just playing music; they're listening for the vibrations our movements create in response. Every step, every gasp vibrates the pipes. They know our position and approximate mass."</p>
+  <p>The implication solidified my understanding of the enemy. The Knockers weren't just feral or reactive; they were structural engineers of chaos. They had turned the school's own infrastructure into a three-dimensional sonar map.</p>
+  <p>"Silent movement is not enough," I concluded. "We must move out of phase with the structure. Three of you maintain contact with the left wall, three with the right. Minimum contact points. Shallow breaths. Now."</p>
+  <p>The movement became an agonising, painfully slow process. The cold seeped into our bare feet, and the proximity to the pipes — now understood as acoustic wires — felt terrifyingly intimate. We were moving blind, muted, and controlled through their territory.</p>
+  <p>The fluorescents overhead flickered in irregular pulses, the failing ballasts casting the corridor in stuttering green-white light that made every shadow shift. The tubes buzzed with a sound almost as unnerving as the Knockers' taps, their hum resonating faintly in the same pipes that carried the music. Everything in this building was connected. Everything carried information. I kept moving. I held the silver key so tightly the ridged edge pressed white into my palm.</p>
+  <p>The corridor twisted once more, ending abruptly at a thick, vault-like door. Industrial steel, sealed tight, marked with a faded placard:</p>
+
+  <div class="terminal">
+    <span class="terminal-line" style="letter-spacing:0.1em;">Level B Chemistry Lab — Containment</span>
+  </div>
+
+  <p>The air emanating from the door's seams smelled sharply of ozone and medical alcohol — clean, controlled, manufactured. This was the source of breathable air, and almost certainly the source of the contamination above. Both things lived behind the same door.</p>
+  <p>The music ceased immediately. The abrupt silence was more jarring than the music itself. It lasted exactly three seconds.</p>
+  <p>Then the silence was shattered by a devastating sound: the sharp, piercing wail of a child — a sound of absolute, unmistakable human agony, amplified and echoing through the concrete.</p>
+  <p>The sound was followed instantly by a familiar, wet, rhythmic noise: a person choking and struggling to draw breath, exactly replicating the death throes we had all watched in the classroom. It was a perfectly engineered psychological attack.</p>
+  <p>Ishani froze completely, clutching her head. "We can't leave someone suffering! We have to help!" she wailed.</p>
+  <p>Mr. Dev, his face grey, leaned against the wall, clutching his chest. The familiar choking sound resurrected his guilt, threatening to strip him of his function entirely. "It's him… it's Arjun's sound…" he choked.</p>
+  <p>"It is a recording," I snapped, pulling Ishani forward, forcing her gaze onto the thick, circular glass observation window set high in the steel door. "It is a test. They are playing on your weakness. They know what happened in the classroom. Focus on the data, not the drama."</p>
+  <p>I inserted the silver key into the reader slot. The device hummed to life, glowing with an intense green light. The multi-pin security lock engaged with a high-pitched, mechanical shriek that thankfully masked the external sounds momentarily.</p>
+  <p>As the lock began its final sequence, I pressed my face to the observation port. Through the thick glass, I saw the source of the sound: a tall, unnaturally gaunt figure wearing a heavily stained school janitor's uniform. Its posture was one of absolute stillness, of waiting. It was holding a small, antiquated audio recorder up to its face. It pressed a button. The wail came again, perfectly rendered.</p>
+  <p>This was a Knocker. Not a myth, not a metaphor — a physical entity. A former person, occupied rather than destroyed. The Knocker was waiting for the door to open, expecting us to rush in, driven by the sound of suffering. The lure was also the ambush.</p>
+  <p>The lock clicked its final tumbler. The massive steel door groaned, beginning its slow, heavy swing inward, releasing a wave of clean, intoxicatingly cold air. We had seconds.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 7 ══════════════════ -->
+<section class="chapter" id="ch7">
+  <div class="chapter-header" data-chapter="Chapter VII">
+    <div class="chapter-title-text">The Listening Room</div>
+  </div>
+
+  <p>"Sid, your purpose is not to fight," I stated, my voice low and urgent, fighting the overwhelming pull of the clean air. "It is to create a diversion. Do not breathe deeply yet — the rapid transition from high-CO₂ air to clean air needs to be gradual. If you suddenly flood your system with pure air after hours of elevated carbon dioxide, you will hyperventilate and lose consciousness. Slow breaths. Keep your focus."</p>
+  <p>I handed Sid the heavy, metal-plated dictionary — our only remaining projectile of meaningful mass.</p>
+  <p>"The moment the door opens enough for your arm to clear, throw the dictionary toward the far back wall of the room, as hard as you can. Draw its focus away from the entrance. We move on the sound of impact. Zero contact with the Knocker is the objective."</p>
+  <p>Sid nodded, his earlier shame replaced by cold, operational focus. He braced his foot against the frame. The door scraped open nearly a metre. The Knocker, still focused on the audio recorder, stood ten feet inside the lab, its back partially to us.</p>
+  <p>"<strong>NOW!</strong>"</p>
+  <p>Sid exploded through the opening, shoving the dictionary forward and throwing it low and fast. It sailed across the polished lab floor, hitting the far concrete wall with a massive, echoing <strong>KERRANG!</strong> The sound of metal on concrete was a thunderclap in the confined space.</p>
+  <p>The Knocker flinched violently, its head snapping toward the sound. Its face, illuminated by the blinding white fluorescents inside the lab, was stretched tight, its jaw unnaturally wide, its eyes huge and dark. It was terrifyingly human, yet utterly alien. The diversion was successful.</p>
+  <p>"<strong>GO! GO! GO!</strong>"</p>
+  <p>Sid veered immediately left, away from the Knocker, toward the complex machinery at the back of the lab. Ishani followed, low and fast, eyes fixed on Sid. I shoved Tanya through the door next. She stumbled, momentarily blinded by the bright light, but her primal fear of being left outside kept her moving forward.</p>
+  <p>Mr. Dev hesitated, staring at the Knocker. His moral paralysis returned. "Move, Professor," I snapped, shoving him through with a full-body check. "Your duty is to the living." He stumbled forward, dragging Aarav — still muttering about sound frequencies — into the room.</p>
+  <p>I was the last to enter the lab. The room was immense: a complex of steel tables, glass tubes, and towering filtration units. The air was pristine, cold, and dry — a stark contrast to the humid, CO₂-saturated basement we had crawled through.</p>
+  <p>I turned back to the door and quickly kicked the silver key out of the mechanism, jamming it sideways in the lock. The door could not be immediately closed or re-opened from outside.</p>
+  <p>The Knocker, alerted by the continuous noise of our entry, finally turned from the dictionary. It moved with sickening speed — not running, but a fluid, silent gliding motion — its huge, dark eyes fixing on me. It was no longer interested in the recorder. It was interested in the one who had controlled the breach. <em>Me.</em></p>
+
+  <p class="section-head">The Air is the Answer</p>
+
+  <p>"Shallow breaths," I commanded, forcing the group to crouch low among the stainless steel table supports. "Your bodies have been adapting to high-CO₂ air for hours. A sudden flood of clean oxygen will cause hyperventilation and vasodilation. Take small sips of it. Let your system recalibrate gradually."</p>
+  <p>The Knocker had crossed the threshold behind us. It moved to neutralise the largest physical threat first — the most efficient tactical choice — covering the distance to Siddharth in two silent, fluid strides. Its long, thick fingers clamped down on Sid's shoulder and throat simultaneously, locking his joints and cutting off his windpipe with mechanical precision. It moved with the efficiency of a system executing a programmed response, not the rage of an animal.</p>
+  <p>Sid was massive, but against the Knocker's inhuman, precise strength, he couldn't leverage his size. He made a horrible, muffled sound, eyes bulging as he scrabbled futilely at the Knocker's forearm.</p>
+  <p>"Ishani! Find something we can use as a physical deterrent! Now!" I snapped. I ignored the melee. Sid was the necessary buffer of time. I moved laterally, keeping the tables between myself and the fight, my focus fixed entirely on the Filtration Unit at the far end of the lab.</p>
+  <p>"Aarav! Identify the external power conduits for that unit! Where is the emergency cut-off?"</p>
+  <p>Aarav, huddled beneath a large metal cabinet, lifted his head slightly, eyes now fixed on the tangle of thick cabling running along the floor. "The main intake runs to the central wall… there's a junction box… red handle…" he choked out. Data retrieved.</p>
+  <p>The Knocker slammed Sid against a workbench. The steel shrieked, and a beaker full of dark, viscous liquid shattered loudly on the concrete. I reached the Filtration Unit — the size of a small truck, its side panel locked with a high-security pin pad. I retrieved the silver key from where I had jammed the door mechanism and inserted it here. It slid in smoothly and turned with a soft click. The panel unlocked.</p>
+  <p>Ishani, demonstrating a sudden, chilling calm, was already beside a stack of equipment. She seized a pressurised gas cylinder — Nitrogen, clearly labelled, used for purging chemical lines — and began dragging it toward the fight, its weight scraping loudly on the floor.</p>
+  <p>"It's too heavy to lift!" she rasped. "Tanya! Help her roll it! Sid is failing!" I commanded.</p>
+  <p>Tanya, galvanised by the immediate, visible brutality, overcame her paralysis. She rushed to Ishani's side and together they rolled the cylindrical tank toward the fight.</p>
+  <p>Mr. Dev, still shell-shocked, watched the fight, his hands useless. "Professor Dev! The beaker that shattered! What was in it?" I snapped.</p>
+  <p>He blinked, his mind struggling to retrieve the data. "Viscous… heavy metal compounds… possibly thallium salts in concentrated sodium hydroxide solution. Highly caustic. Corrosive on contact, severely irritating to mucous membranes if aerosolised."</p>
+  <p>Useful. A contact and respiratory irritant that would disrupt the Knocker without generating a cloud dangerous enough to incapacitate us all simultaneously.</p>
+  <p>The Knocker released Sid's throat and seized his arm instead, preparing to hyperextend the joint. Sid bellowed — a ragged, raw sound of pain and desperation.</p>
+  <p>"The nitrogen valve! Ishani, aim the open valve at its face! Sid, use your weight — fall backwards, pull it off balance!"</p>
+  <p>Sid, processing the command through the agony, used his huge frame to lean back against the Knocker, throwing its centre of gravity forward. The Knocker stumbled fractionally — its movements momentarily disrupted. Ishani and Tanya wrenched the nitrogen tank's valve open. The gas released — not a wide jet, but a focused stream of freezing vapour that hit the Knocker's face and upper chest. The Knocker didn't scream or roar; it simply stopped, its large, dark eyes widening fractionally, momentarily disoriented by the sudden extreme cold. The cold shock was enough.</p>
+
+  <p class="section-head">The Control Override</p>
+
+  <p>I flung the access panel of the Filtration Unit open. The interior was a clean, dense maze of piping, HEPA stages, and carbon filters. The control interface was a small, military-grade screen glowing with a constant, humming green light. My goal was singular: lock it down.</p>
+  <p>I inserted the silver key into the main interface port. It glowed red — accepting the override command.</p>
+  <p>The Knocker, recovering from the nitrogen blast, was now moving toward me again — silently, steadily, ignoring the others. It understood I was the controlling intelligence.</p>
+  <p>"Aarav! The red handle! If I can't lock this in the next thirty seconds, you pull that emergency intake shut-off!" I screamed.</p>
+  <p>Aarav, shaking violently but driven by my focused voice, pointed toward the junction box. "It's the emergency intake shut-off… it will seal the lab from the outside air source," he choked. That was the last resort. Sealing the lab entirely would trap us inside a finite volume of air with the Knocker — shared suicide. I needed control, not that.</p>
+  <p>My fingers flew over the keyboard, inputting K. Arjun's research code — the numerical sequence I had seen etched beneath his name in the dead researcher's notebook. I recognised the mathematical structure: it was built around the Euler-Mascheroni constant, an esoteric signature Arjun must have embedded as a final access point — something only a dedicated coder would recognise. I had spent months last year working through problems that used exactly this constant. He had built the lock for someone like me, or for himself in a moment of crisis, never knowing which it would be.</p>
+  <p>The Knocker was five feet away. Sid, crawling on the floor, seized the Knocker's ankle. The Knocker didn't fall; it merely shifted its weight, dragging Sid behind it without breaking stride.</p>
+  <p>I focused on the final command sequence: <strong>LOCKOUT AND ACCESS TRANSFER.</strong> My code was accepted.</p>
+  <p>The hum of the Filtration Unit changed instantly, increasing in pitch to a controlled, high whine. The main access panel slammed shut with a heavy thud and locked. The silver key was sealed inside the unit. The unit was now under my control, inaccessible without a severe structural breach.</p>
+  <p>The Knocker froze completely. It released Sid's ankle. It stood perfectly still, only three feet from my position, its stretched face tilted — the posture of something recalibrating. It didn't look defeated. It looked <em>attentive</em>, as if waiting for the next data input.</p>
+  <p>The screen on the Filtration Unit changed. Text appeared, stark white against black, line by line.</p>
+
+  <div class="terminal">
+    <span class="terminal-line">PROTOCOL ACCEPTED.</span>
+    <span class="terminal-line">CONTROLLER: NEW HOST DETECTED.</span>
+    <span class="terminal-line">AIRFLOW STABILISED. CONTAMINANT DISPERSAL PAUSED.</span>
+  </div>
+
+  <p>We had reached the control point. Ishani and Tanya stopped breathing, staring at the screen. Then a final line appeared — not a welcome, not a confirmation, but a threshold condition, blinking steadily, patient as a question.</p>
+
+  <div class="terminal">
+    <span class="terminal-line">HOST EVALUATION: IN PROGRESS.</span>
+  </div>
+
+  <p>The Knocker didn't move. It didn't try to smash the unit. It raised its hand — the one that had nearly killed Sid — and began to produce a new sound: a soft, rhythmic clicking, like the rapid actuation of a mechanical relay. Data processing.</p>
+  <p>"What does that mean?" Tanya wailed, her fear now transferred from the creature to the cryptic machine.</p>
+  <p>"It means we are not fighting an animal," I stated, my voice allowing a thin edge of exhaustion through for the first time. "We are fighting a system. And we just applied to join it."</p>
+  <p>I had the clean air. We had survived the breach. But the screen was still blinking. <em>Evaluation in progress.</em> The Knocker took one final, silent step backward, merging into the deep shadows near the far wall — leaving the centre of the lab open, as if it were a silent invitation to prove ourselves worthy of the conclusion.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 8 ══════════════════ -->
+<section class="chapter" id="ch8">
+  <div class="chapter-header" data-chapter="Chapter VIII">
+    <div class="chapter-title-text">The Filtration Unit</div>
+  </div>
+
+  <p>The lab was blindingly bright, filled with the loud, rhythmic hum of the Filtration Unit as it restabilised itself under the new command architecture. It was a space built for complex containment — dominated by stainless steel tables, pipework, and at the far end, the main filtration stack, its canisters and digital readouts now locked to my access alone.</p>
+  <p>The Knocker stood in the shadows near the far wall. Still. Watching.</p>
+
+  <div class="terminal">
+    <span class="terminal-line">HOST EVALUATION: IN PROGRESS.</span>
+  </div>
+
+  <p>The screen blinked its patient, unresolved condition, and I stared at it long enough to understand that the system was not waiting for a code. It was waiting for something it hadn't named yet.</p>
+  <p>"Everyone stay low," I said. "Don't make sudden movements. Don't approach the unit. The evaluation window is active — I don't know what triggers it to resolve."</p>
+  <p>Sid was on the floor, breathing in slow, deliberate increments, one hand pressed against his bruised throat. Tanya had retreated to the far corner with the water supply, her eyes on the Knocker. Aarav had already located a workbench and was absorbed in the system's cabling layout. Ishani was beside Sid, her hands moving with quiet efficiency — no bandages available, but she was monitoring his breathing rate, pressing two fingers gently to his wrist to count his pulse, adjusting his position so his airway stayed clear.</p>
+  <p>I stood at the interface, watching the screen blink. Then Aarav looked up. "Where's Mr. Dev?" he asked.</p>
+  <p>The silence in the lab confirmed it before I could run the calculation. I counted the bodies in the room. Five. Not six.</p>
+  <p>I had pushed Mr. Dev through the door in the chaos of the breach. I had seen him stumble forward, seize Aarav, drag him into the room. But in the final seconds — the sprint to the Filtration Unit, the nitrogen diversion, the code input — I had not verified his position.</p>
+  <p>I crossed the lab in ten strides and pressed my face to the observation port in the steel door. He was in the corridor. Sitting with his back against the wall, three metres from the door, in the partial darkness beyond the lab's fluorescent spill. His hands were flat on the floor beside him, as if he had simply sat down and forgotten to decide what to do next. His eyes were open, but focused somewhere considerably further away than the corridor wall.</p>
+  <p>He was breathing. He was not colonised. He was just — stopped.</p>
+  <p>I turned to Ishani. "Sid?" "Stable," she said. "Don't move him yet, but he's not deteriorating."</p>
+  <p>I looked at the Knocker. It hadn't moved from the wall. I looked at the screen.</p>
+
+  <div class="terminal">
+    <span class="terminal-line">HOST EVALUATION: IN PROGRESS.</span>
+  </div>
+
+  <p>I looked at the door. I thought: <em>the evaluation is watching what I do when the logical choice and the right choice are the same, and when they are not.</em> Arjun's final log had said he failed the evaluation because his moral constraints created latency. But there is a difference between indecision born from fear and decision born from care. The system couldn't distinguish them yet. Maybe that was the point.</p>
+  <p>"I'm going back out," I said.</p>
+  <p>Tanya's head snapped up. "Are you out of your mind? The Knockers—"</p>
+  <p>"Are not currently in the corridor," I said. "The system has been stable since I locked the unit. The Knockers respond to the system's state. As long as the evaluation is running, the immediate threat is contained." I paused. "That's my working assumption. I could be wrong."</p>
+  <p>I wasn't waiting for her approval. I picked up a heavy steel tube from the nearest workbench and went to the door.</p>
+
+  <p class="section-head">The Climb</p>
+
+  <p>The corridor was cold and dim. The music had not returned. The only sound was the faint, distant murmur of the building — pipes, deep structure, the slow exhale of a place that had been holding its breath for a long time.</p>
+  <p>Mr. Dev looked up when he heard me. He didn't look surprised. "You're late," he said.</p>
+  <p>I sat down on the floor beside him. Not crouching, not standing — beside him. It felt important.</p>
+  <p>"I need to tell you some things," I said. "Quickly, and without softening them, because we don't have the air for softening."</p>
+  <p>He looked at me sideways. "I remember agreeing to that somewhere."</p>
+  <p>"The researcher we found in the corridor. K. Arjun. His lab coat, the key, the logs. I have his access codes." I paused. "He was twenty-seven. He'd been in this building for eight months documenting the network. He built the Filtration Unit. He built the key specifically for someone who could pass the system's evaluation. He wrote in his final log that he didn't know who they were."</p>
+  <p>Mr. Dev was quiet for a moment. "But he knew what they'd need to be like." "Yes." "And the system chose you." "The evaluation is still running." "Ah." He looked at the floor between his knees. "So we don't know yet." "We don't know yet."</p>
+  <p>Another silence. Then: "What else?"</p>
+  <p>"The Knocker in the lab is not attacking us. It's in a wait state. The system is running something it calls a Host Evaluation. It will complete — I think — when I do whatever I'm supposed to do. I don't know what that is yet." I looked at him directly. "I need you in the lab. I need your systems knowledge and I need you functional. And I need you to stop sitting in corridors."</p>
+  <p>He was quiet for long enough that I started to think he was going to say something reasonable that would take time. Instead, he stood up. He brushed the concrete dust off the back of his trousers with two neat strokes. He reached into his shirt pocket — the small breast pocket he always kept buttoned — and took out Arjun's glasses. The wire-rimmed pair he had placed parallel to the desk edge in the classroom, hours and hours ago. He had carried them the whole way down.</p>
+  <p>He looked at them for a moment, folded the arms carefully, and slid them back into the pocket. "Let's go," he said.</p>
+
+  <p class="section-head">The Return</p>
+
+  <p>The Knocker registered our entry before we were fully through the door. Its huge eyes moved — not to me this time, but to Mr. Dev.</p>
+  <p>Mr. Dev looked back at it. He studied it with the careful, assessing gaze of a teacher looking at a student who has done something unexpected. Then he said, quietly and without fear: "Hello."</p>
+  <p>The Knocker did not respond. But its posture shifted — fractionally, almost imperceptibly. The faint, rhythmic clicking that had been its constant background sound paused for two full seconds, then resumed at a slightly lower frequency.</p>
+  <p>Aarav, at the workbench, turned around with wide eyes. "What was that?" "Acknowledgement," I said, though I wasn't entirely sure. I filed it. I noted it. I did not share the full weight of what it might mean.</p>
+  <p>Mr. Dev settled beside Sid, nodding once at Ishani. "How is he?" "Breathing," Ishani said. "He'll be in pain when the adrenaline drops." "Join the club," Mr. Dev said.</p>
+  <p>Sid opened his eyes. He looked at Mr. Dev. Then he looked at the Knocker in the shadows. Then he looked at the empty space beside him where Arjun used to sit, in every classroom, every period, for the last two years — and he looked away from it again, quickly, the way you look away from something that is too bright.</p>
+  <p>Nobody said anything. There was nothing to say that the room wasn't already holding.</p>
+  <p>I returned to the interface. The screen blinked.</p>
+
+  <div class="terminal">
+    <span class="terminal-line">HOST EVALUATION: IN PROGRESS.</span>
+  </div>
+
+  <p>I read through the system logs. I pulled up K. Arjun's development records, his network analysis, his contamination mapping. I read. I absorbed. I tried to understand what the system was built to do, and what it had done instead, and where the distance between those two things had gone wrong. The screen kept blinking. And I kept reading.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 9 ══════════════════ -->
+<section class="chapter" id="ch9">
+  <div class="chapter-header" data-chapter="Chapter IX">
+    <div class="chapter-title-text">The Lab Below</div>
+  </div>
+
+  <p>The blinding, clinical glare of the fluorescents felt more oppressive than the deepest gloom of the tunnels. The lab, though free of the choking CO₂ above, was now a surgical theatre for the group's mental collapse. The Knocker stood in the corner. The screen blinked. And I read.</p>
+  <p>K. Arjun's logs were not the tidy documentation of a controlled experiment. They were the work of a man who had started as a researcher and ended as something else — part engineer, part keeper, part apologist. The earlier entries were clinical, structured. The later ones were not.</p>
+  <p>I read them in order.</p>
+  <p>The first entries documented the soil sample — an anomalous fungal colony recovered from a construction site three kilometres east. Not engineered. Discovered. The colony's behaviour was unusual: it spread laterally through soil and subterranean piping at a rate that suggested a purpose. Not growth for its own sake, but connection. Remediation. The colony was doing something to the chemical composition of the substrate it moved through — cleaning it, stabilising it, converting accumulated industrial toxins into inert compounds. It was not an invader. It was a custodian.</p>
+  <p>The middle entries documented the escalation. The colony had found pathways into the school's old ventilation system through the construction site's disrupted drainage. Arjun had recommended immediate containment and sealed-environment study. The recommendation was noted. The construction continued.</p>
+  <p>I read that twice.</p>
+  <p>Then came the entries about the Knockers. About what the network did when it found a cognitive architecture complex enough to serve as a local node. The colonisation process was not destruction — it was integration. The network was trying to connect. The host's own neurological architecture became part of the system's distributed intelligence. The host did not die. They became something that was no longer quite theirs.</p>
+  <p>There was a side note about anomalous organisms. The network had attempted colonisation of several non-human subjects with negligible success. In small mammals — specifically the albino rat housed in Lab storage — the neural architecture was too simple and too uniform to serve as a functional node. The network's signal had nowhere to branch. It routed around the animal rather than through it, leaving the creature entirely unaffected. Arjun had noted this with something that read almost like admiration: <em>It is too small to be useful and therefore too small to be harmed.</em></p>
+  <p>A separate entry, marked with a double asterisk, addressed the Host designation directly. The Host was not a colonised subject. The Host was the opposite: a mind coherent enough to function as the network's translator without being subsumed by it. The distinction was the Host's capacity for independent decision-making — full autonomy preserved, fully intact. The network did not want to occupy the Host. It wanted to negotiate through them.</p>
+  <p>Arjun had written: <em>The network does not intend harm. But intention is a concept it does not possess. It is doing what it was designed — by evolution, not by us — to do. It is connecting. The tragedy is that connection, at the scale it is attempting, requires a translator. A mind that can negotiate the terms. I have tried to be that mind. I have failed. The evaluation has rejected me three times.</em></p>
+  <p>And then, near the end of the timestamped entries, a line that I extracted carefully and did not read aloud:</p>
+  <p><em>Eighteen months of documentation. Haven't been home in eight months. Sid will be furious.</em></p>
+  <p>I stopped. I read it again. <em>Sid.</em></p>
+  <p>I looked across the lab at Siddharth — sitting with his back against a table leg, his bruised throat rising and falling with slow, deliberate breaths, his eyes half-closed. I filed it. I closed that entry. I did not share it. Not here, not now, not like this.</p>
+  <p>There was a final entry that was not timestamped. It was the last thing K. Arjun had written. The timestamp field was empty, as if he had stopped caring what time it was.</p>
+
+  <div class="terminal">
+    <span class="terminal-line" style="opacity:0.5; font-size:0.58em; letter-spacing:0.15em; margin-bottom: 0.6rem;">K. ARJUN — FINAL ENTRY — [NO TIMESTAMP]</span>
+    <span class="terminal-line">"I am not the Host. I have known this since the second evaluation. I am too conflicted — not by compassion, but by the specific combination of compassion and fear. The network requires clarity. It requires someone who has encountered irreversible loss and continued to function, not by suppressing the grief but by absorbing it into the decision structure. I have not lost anyone yet. I am afraid to.</span>
+    <span class="terminal-line" style="margin-top:0.5rem;">I built The Key for that person. I do not know who they are. I only know what they will have had to survive to pass the evaluation."</span>
+  </div>
+
+  <p>I sat with that for a moment. The lab hummed. The screen blinked.</p>
+  <p>Then Tanya said something that I wasn't expecting. She said it quietly, not as a challenge or a manipulation. She said it in the particular flat tone of someone who has stopped performing: "He was someone's person."</p>
+  <p>She was looking at the floor where the spilled beaker had left a dark stain — not at the Knocker, not at me, not at anyone. "The Knocker. He was someone's person before this."</p>
+  <p>Ishani looked up from Sid's side. Something in her face shifted. "Yes," she said. "He was."</p>
+  <p>The room absorbed that. Nobody argued it. Nobody expanded on it. It sat in the air between us, which was cleaner than any air we had breathed in over twelve hours, and it changed the weight of the room.</p>
+  <p>I turned back to the interface. My fingers were still on the keyboard. I had the logs, the access codes, the network architecture. I had everything K. Arjun had spent eighteen months documenting. And I still didn't understand what the evaluation was waiting for.</p>
+  <p>I looked at the empty workbench beside the filtration stack. The surface was clean and organised — tools laid out in the careful arrangement of someone who maintained their workspace even at the edge of failure. I could see, from the negative space in the arrangement, where the silver key device had sat before he had carried it to the corridor to die beside. Everything else was still in its place.</p>
+  <p><em>Arjun would have known what was missing.</em></p>
+  <p>The thought arrived without warning and without permission. Our Arjun. Not K. Arjun. Arjun, who had adjusted his glasses every five seconds when he was thinking hard. Who had stood up without hesitation because he knew where the oxygen equipment was stored. Who had been the youngest person in the room and the first person to volunteer.</p>
+  <p>Arjun would have looked at this workbench and known immediately what the gap in the arrangement meant. He would have picked up each tool in sequence, cross-referenced it against the system's input requirements, and told me in three sentences exactly what we were missing and why. He would have been right.</p>
+  <p>I said it out loud. I didn't mean to. It just came out, in the particular register of something that had been true for hours and hadn't found its voice yet.</p>
+  <p>"Arjun would have known how to fix this."</p>
+  <p>Nobody responded. Not immediately. The lab held the words for a moment.</p>
+  <p>Then the screen stopped blinking. New text appeared — not line by line, but all at once, as if it had been waiting for the exact threshold:</p>
+
+  <div class="terminal">
+    <span class="terminal-line">HOST VERIFICATION: COMPLETE.</span>
+    <span class="terminal-line">WELCOME.</span>
+    <span class="terminal-line">THE AIR IS THE ANSWER.</span>
+  </div>
+
+  <p>The Filtration Unit's hum shifted to a lower, steadier register. The clinical white of the fluorescents warmed fractionally — barely perceptible, but there. The air from the unit's vents moved differently: less like a machine cycling and more like breathing.</p>
+  <p>The Knocker, in the far corner, took one step back. Then another. Then it stood entirely still, in the deepest shadow of the room, and it clicked once — a single, brief, different sound — and then it was quiet.</p>
+  <p>"What just happened?" Aarav whispered. "The evaluation completed," I said. "What was it evaluating?"</p>
+  <p>I looked at the screen. I thought about K. Arjun's final entry. <em>Someone who has encountered irreversible loss and continued to function, not by suppressing the grief but by absorbing it into the decision structure.</em></p>
+  <p>"Whether I could hold a loss and still think," I said. "Whether the thinking was affected by it."</p>
+  <p>The screen changed again. A second panel opened beside the WELCOME message — a diagram, clean and schematic, displaying what appeared to be a partial map of the surrounding area. The school's footprint was marked in the lower left. A route was highlighted, moving north-east through street-level infrastructure. It terminated at a building marked only with a frequency number and three words:</p>
+
+  <div class="terminal">
+    <span class="terminal-line">SIGNAL. ACTIVE. FIND.</span>
+  </div>
+
+  <p>The mall. I recognised the position from the surrounding street grid. Three blocks north-east.</p>
+  <p>"We have a direction," I said. I looked at the map for a long moment. I memorised it precisely — the route, the frequency, the building's coordinates. Then I took a pen from the workbench and wrote it on the inside of my forearm.</p>
+  <p>I turned to the group. "Rest for twenty minutes," I said. "Real rest. Controlled breathing, no talking, no movement unless necessary. Your systems have been in sustained deprivation and they need a partial recovery window before the next transit. After that, we move."</p>
+  <p>Nobody argued. Even Tanya didn't argue.</p>
+  <p>The Filtration Unit breathed steadily. The screen displayed its welcome in simple white text. The Knocker stood in its shadow, still and quiet, a sentinel at the boundary of something we hadn't yet reached.</p>
+  <p>We had the air. We had the direction. We had twenty minutes, which was the most rest any of us had been allocated since the world ended.</p>
+  <p>I sat down on the floor, my back against the filtration stack, and I thought about Arjun. I did not try to stop thinking about him. I just let the thought be what it was — accurate, and painful, and part of the calculation now.</p>
+  <p>The air in the lab was cold and clean and manufactured, and it tasted of the people who had survived to breathe it. That was enough for twenty minutes.</p>
+</section>
+
+<!-- ══════════════════ CHAPTER 10 ══════════════════ -->
+<section class="chapter" id="ch10">
+  <div class="chapter-header" data-chapter="Chapter X">
+    <div class="chapter-title-text">The Vent</div>
+  </div>
+
+  <p>The twenty minutes ended. I stood, and the group stood with me — not because I commanded it this time, but because the rest had done its work and the screen's map was a clock they could all read. The route to the signal was displayed in simple lines. The destination was three blocks north-east. But between us and the street was Level C.</p>
+  <p>"Sid and Mr. Dev remain here," I stated. "Sid's airway is still compromised — the bruising will restrict him on any sustained physical exertion in a confined vertical space. Mr. Dev, you manage the Filtration Unit. The system is now logged to my access code, but the unit needs a physical presence to monitor the intake filters. If the contamination index climbs above the threshold on the left panel, there's an emergency seal valve on the lower right. Do not touch the primary controls."</p>
+  <p>"I was a computer science teacher for eleven years," Mr. Dev said. "I can read a panel." "Good."</p>
+  <p>"What do I do if the Knocker moves?" he asked, glancing toward the shadowed corner.</p>
+  <p>I thought about that for a moment. "Talk to it," I said. He looked at me. "You're serious." "It responded to you once already. You're the only person in this room it hasn't tried to suppress." I paused. "That may be coincidental. I'm noting it anyway."</p>
+  <p>Ishani looked from Sid to me. The reluctance in her face was real — the empathy that had defined her entire arc through the night was pulling her toward staying with the injured. But she had come this far by being the space between panic and momentum, and she understood her function wasn't finished yet. "You're needed on the descent," I said, answering the question she hadn't asked. She nodded once and moved to the hatch.</p>
+  <p>Tanya looked at the hatch, then at the remaining water supply, then at me. For once, she didn't speak. She picked up the smaller of the two water containers — leaving the larger one for Sid — and went to the hatch without being told.</p>
+  <p>Aarav was already there, crouched, peering down into the spiral stairwell with his head tilted at the particular angle he used when converting auditory information into data.</p>
+
+  <p class="section-head">The Acoustic Trap</p>
+
+  <p>The hatch opened with a violent, tearing <span class="sound">SCREEEEECHHH</span> of stressed metal — instantly absorbed by the lab's dense, sterile air. Below lay a spiral stairwell of rusty grating, plunging into absolute visual darkness. It was a narrow, vertical maintenance access passage, not designed for human traffic. The air that rose from it smelled of damp concrete and ozone — cleaner than the main basement, tinged with something metallic.</p>
+  <p>The Knocker moved first. It didn't step onto the unstable grating; it pressed its long hands against the concrete core of the stairwell and descended, gliding vertically along the wall with unnatural grace, its rhythmic clicking resuming in the enclosed shaft. It was mapping the vertical space, ensuring the path was clear.</p>
+  <p>"Aarav, acoustic assessment," I said. He took a slow breath. "The grating is a perfect sound conductor — worse than the tunnel floor. And the core is loaded with active steam and ventilation lines. The whole shaft will amplify footfall and transmit it laterally through the building's pipe network. The Knocker is relying on those pipes." He paused. "This vent is essentially a microphone pointed at whatever is below us."</p>
+  <p>Every step, every shift of weight, every exhale — all of it audible to the network below. Careful movement wasn't enough. We needed acoustic insulation.</p>
+  <p>"We use the hose," I said. I unhooked the remainder of the air-hose line we had carried from the classroom — battered, frayed at one end, but still load-bearing — and secured it to the heavy railing at the top of the hatch.</p>
+  <p>"Aarav goes first. Use the hose as a dampener between your body and the grating. Minimise direct metal contact."</p>
+  <p>Aarav, his mind already engaged by the structural problem and therefore largely unoccupied by fear, gripped the hose and slid down quickly, disappearing into the shaft's gloom.</p>
+  <p>As he descended, the environment reacted. A sudden, steady hiss erupted from the pipes running down the core of the shaft — not violent, but constant and precisely calibrated, just loud enough to mask the sounds of careful movement. The Knocker, deep below, paused its clicking.</p>
+  <p>"Report sound source!" I called down. Aarav's voice came back, strained and thin: "The vent lines — they're bleeding off pressure deliberately! The system is generating white noise to mask our acoustic signatures from external detection!"</p>
+  <p>The Host was being protected. The network was running interference for us against its own peripheral nodes.</p>
+  <p>I followed Aarav, sliding down the hose. The metal railing burned against my palms through friction, and the white noise hammered at my focus, creating a disorienting vibration that resonated directly in my skull. I fixed my attention on the cold, slick feel of the hose and let everything else become irrelevant.</p>
+  <p>Mid-descent, I looked up. Tanya was frozen at the hatch, eyes wide, hands clamped over her ears, tears streaming silently. The acoustic weapon had found her threshold.</p>
+  <p>I could not climb back up again. I couldn't afford it physically, and the group below was the priority. I pitched my voice directly at her — not shouting, but precise and close to her frequency of panic.</p>
+  <p>"Tanya. The noise stops the moment we are gone. It is protecting us. The only way to make it stop is to finish the descent. You move, or you stay alone until we come back up. Those are the only two options."</p>
+  <p>A moment. Then she grabbed the hose.</p>
+
+  <p class="section-head">The Communication Array</p>
+
+  <p>Aarav reached the base first and called the all-clear. I landed in a narrow, cold sub-basement corridor — Level C. The air pressure was lower here, and the silence was startling after the sustained white noise of the descent. The ambient sound of the building had dropped to almost nothing — a deep, structural quiet that felt less like absence and more like held breath.</p>
+  <p>The Knocker stood at the far end of the narrow corridor beside a sealed, heavy door. The door was marked: <strong>COMMS ARRAY.</strong></p>
+  <p>Aarav quickly assessed the doorframe. "The shielding isn't primarily acoustic — it's electromagnetic. Lead-lined. This room is isolated from external signals. Whatever broadcast capacity is in there, it's been protected from the network's own frequency interference." He turned to me. "This is a bunker. It's built to receive and transmit without contamination from the biological signal layer."</p>
+  <p>The Knocker was still beside the door. It had not gestured toward it, had not knocked, had not produced a sound. Ishani, who had descended last and was catching her breath beside me, looked at the Knocker, then at the door, then said quietly: "It's waiting for you."</p>
+  <p>The Knocker moved — not toward the door, not toward any of us. It moved toward me, and stopped with its face close enough that I could see the fine detail of what the colonisation had done: the skin at the temples was subtly different, slightly iridescent, as if something very thin and very patient had settled just beneath the surface. The pupils were expanded to nearly full iris coverage. But the face was — a face. A specific person's face. The former janitor. Someone who had worked here, who had had a schedule and a lunchbox and a name.</p>
+  <p>It raised its arm slowly. It tapped its hand against its own ear. Then it pointed at the Comms Array door. Then it turned its long finger directly upward, pointing at the shaft we had just descended. Then it was still.</p>
+  <p>I understood the message with complete clarity.</p>
+  <p class="pull-quote"><em>Do not make a sound once inside. Go in and be silent. They are listening from above.</em></p>
+  <p>Not the Knockers below. Not the network's local nodes. Something else — something external to the building's architecture — was monitoring this frequency. The Comms Array was a gap in the network's sonar coverage, a shielded dead zone. It was the only place in this building where a transmission could be sent or received without the network overhearing it.</p>
+  <p>Which meant someone on the outside had known that. And had built toward it.</p>
+  <p>I looked at the door. I looked at the hose-burnt marks on my palms, and the map on my forearm, and the screen's route that led three blocks north-east to a signal that was active and waiting.</p>
+  <p>I looked at Aarav and Ishani and Tanya, who had followed me from a classroom to a shaft to a corridor to a basement to a Level C sub-basement that smelled of ozone and old concrete and the particular silence of a room that had been waiting for a long time to be found.</p>
+  <p>Then I put my hand on the door.</p>
+
+  <p style="text-align:center; font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.25em; color:var(--text-muted); margin-top:3rem; opacity:0.6;">[ End of Act One ]</p>
+</section>
+
+<a href="books.html" class="back-link">← Back to Books</a>
+
+</article>
+<a href="books.html" class="back-link">← Back to Books</a>
+
+</article>
+
+<!-- ═══════════ ROSTER MODAL ═══════════ -->
+<div class="modal-bg" id="modal-roster">
+  <div class="modal">
+    <button class="modal-close" id="close-roster">✕ Close</button>
+    <div class="modal-title">Character Roster</div>
+    <div class="modal-eyebrow">The Last Class — The Sealed Seven</div>
+
+    <p class="roster-section-label">Students &amp; Teacher</p>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Laasya <span style="font-size:0.8em; opacity:0.6;">(Lara)</span></span>
+        <span class="roster-role">Logic — The Protagonist</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Anxious but laser-sharp. Coding, pattern recognition, decisive action. Emotionally detached to a dangerous degree — but it is armor, not absence.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">Maddie — warm, present. No dad in the picture.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Mr. Dev</span>
+        <span class="roster-role">Hope — The Teacher / Mentor</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Witty, tactical, sarcasm as oxygen. The glue of the group; his silence when hope fades is their true breaking point.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">No family. Just Remi — his cat.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">K. Siddharth</span>
+        <span class="roster-role">Courage — The Protector</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Bold, self-sacrificial, physically powerful. High oxygen demand. Lara's closest friend — she alone calls him Sid or Siddu.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">Mom and Dad. A warm household. Lara has been there more times than she can count.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Tanya</span>
+        <span class="roster-role">Fear — The Antagonist</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Cold, calculating, driven by self-preservation. Believes in survival of the fittest.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">Mom — CEO. Neglectful, transactional. Dad — deceased.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Ishani</span>
+        <span class="roster-role">Empathy — The Anchor</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Calm, articulate, psychologically insightful. Avoids confrontation. The group's emotional center.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">Mom and Dad. A warm, stable home — the architect of who Ishani is.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Aarav</span>
+        <span class="roster-role">Accident — The Savant</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Emotional and reactive, yet observant in panic. Stumbles onto clues while ranting.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">Mom — anxious, calls every five minutes and means it. Dad — the one trying to calmly keep up with her.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Arjun</span>
+        <span class="roster-role">Reason — The Catalyst / Loss</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits &amp; Skills</div>
+          <div class="roster-value">Curious, gentle, methodical. Excels at science and problem-solving. The group's conscience.</div>
+        </div>
+        <div class="roster-field">
+          <div class="roster-label">Family</div>
+          <div class="roster-value">No one. Orphan.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="roster-section-label">Threats</p>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">The Knockers</span>
+        <span class="roster-role">External Threat / Hive Mind</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits</div>
+          <div class="roster-value">One distributed neural intelligence across multiple physical bodies. Psychological warfare through imitation, tapping, and sound replay. Nodes, not individuals.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-card">
+      <div class="roster-card-header">
+        <span class="roster-name">Nox</span>
+        <span class="roster-role">Resilience — The Mascot</span>
+      </div>
+      <div class="roster-body">
+        <div class="roster-field full">
+          <div class="roster-label">Traits</div>
+          <div class="roster-value">Tiny albino rat. Unnaturally healthy, silent, fast. A biological anomaly that defies the rules of the contaminated world.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MAPS MODAL ═══════════ -->
+<div class="modal-bg" id="modal-maps">
+  <div class="modal">
+    <button class="modal-close" id="close-maps">✕ Close</button>
+    <div class="modal-title">Maps</div>
+    <div class="modal-eyebrow">Location &amp; Layout</div>
+    <div class="maps-placeholder">
+      <span class="maps-icon">⬡</span>
+      Maps coming soon.<br>
+      Schematics, floor plans, and route data<br>
+      will appear here as the story progresses.
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Progress Bar ────────────────────────────────
+const bar = document.getElementById('progress-bar');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.width = (window.scrollY / h * 100) + '%';
+}, { passive: true });
+
+// ─── Sidebar Toggle ───────────────────────────────
+const toggle = document.getElementById('toc-toggle');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+
+toggle.addEventListener('click', () => {
+  const open = sidebar.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+  overlay.classList.toggle('show', open);
+});
+overlay.addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  toggle.classList.remove('open');
+  overlay.classList.remove('show');
+});
+// Close sidebar on TOC link click
+sidebar.querySelectorAll('.toc-item').forEach(link => {
+  link.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    toggle.classList.remove('open');
+    overlay.classList.remove('show');
+  });
+});
+
+// ─── Font Size Controls ───────────────────────────
+const reader = document.getElementById('reader');
+const fontDisplay = document.getElementById('font-display');
+let fontSize = 16;
+const MIN = 13, MAX = 22;
+
+function setFont(size) {
+  fontSize = Math.min(MAX, Math.max(MIN, size));
+  reader.style.fontSize = fontSize + 'px';
+  fontDisplay.textContent = fontSize;
+}
+
+document.getElementById('font-up').addEventListener('click', () => setFont(fontSize + 1));
+document.getElementById('font-down').addEventListener('click', () => setFont(fontSize - 1));
+
+// ─── Modal Logic ──────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+document.getElementById('btn-roster').addEventListener('click', () => openModal('modal-roster'));
+document.getElementById('btn-maps').addEventListener('click', () => openModal('modal-maps'));
+document.getElementById('close-roster').addEventListener('click', () => closeModal('modal-roster'));
+document.getElementById('close-maps').addEventListener('click', () => closeModal('modal-maps'));
+document.getElementById('overlay').addEventListener('click', () => {
+  closeModal('modal-roster');
+  closeModal('modal-maps');
+  // also close sidebar
+  sidebar.classList.remove('open');
+  toggle.classList.remove('open');
+});
+
+// ─── Intersection Observer: Chapter Reveal ────────
+const chapters = document.querySelectorAll('.chapter');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.05 });
+
+chapters.forEach(ch => revealObserver.observe(ch));
+
+// ─── Active TOC + Chapter Indicator ──────────────
+const tocLinks = document.querySelectorAll('.toc-item');
+const chLabel = document.getElementById('curr-ch-label');
+const chName = document.getElementById('curr-ch-name');
+
+const chapterNames = {
+  'ch1': 'The Last Class',
+  'ch2': 'The Silence After Bell',
+  'ch3': 'The Air Turns Heavy',
+  'ch4': 'Hollow Floors',
+  'ch5': 'The Rules of Breathing',
+  'ch6': 'Under the Fluorescents',
+  'ch7': 'The Listening Room',
+  'ch8': 'The Filtration Unit',
+  'ch9': 'The Lab Below',
+  'ch10': 'The Vent',
+};
+
+const chNums = {
+  'ch1': 'I', 'ch2': 'II', 'ch3': 'III', 'ch4': 'IV', 'ch5': 'V',
+  'ch6': 'VI', 'ch7': 'VII', 'ch8': 'VIII', 'ch9': 'IX', 'ch10': 'X',
+};
+
+const trackObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      tocLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+      chLabel.textContent = 'Chapter ' + (chNums[id] || '');
+      chName.textContent = chapterNames[id] || '';
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+
+chapters.forEach(ch => trackObserver.observe(ch));
+</script>
+
+</body>
+</html>

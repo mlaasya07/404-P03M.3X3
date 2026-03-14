@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>my books | laasya ᓚᘏᗢ</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    background: #000000;
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .my-books {
+    background: #fae280;
+    width: 320px;
+    padding: 18px 16px;
+    box-shadow: -10px 40px 20px #8b000094;
+    border-radius: 4px;
+  }
+
+  .title {
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .book {
+    display: flex;
+    justify-content: space-between;
+    margin: 6px 0;
+    font-size: 14px;
+  }
+
+  .divider {
+    border-top: 1px dashed #000;
+    margin: 14px 0;
+  }
+
+  .total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="my-books">
+  <div class="title">all my books ☆</div>
+
+  <!-- ADD / REMOVE BOOKS HERE -->
+  <div class="book" data-price="270">
+    <span>The Class That Breathes</span>
+    <span>₹270</span>
+  </div>
+
+  <div class="book" data-price="699">
+    <span>Crimson Frequency</span>
+    <span>₹699</span>
+  </div>
+
+  <div class="book" data-price="149">
+    <span>This Is How I Feel</span>
+    <span>₹149</span>
+  </div>
+  <!-- END BOOKS -->
+
+  <div class="divider"></div>
+
+  <div class="total">
+    <span>Total Price</span>
+    <span id="total"> ₹0</span>
+  </div>
+
+  <div class="footer">
+    <em>[ happy reading ᓚᘏᗢ ]</em>
+  </div>
+</div>
+
+<script>
+  function calculateTotal() {
+    let total = 0;
+    document.querySelectorAll('.book').forEach(book => {
+      total += Number(book.dataset.price);
+    });
+    document.getElementById('total').textContent = ` ₹${total}`;
+  }
+
+  // Calculate once when page loads
+  calculateTotal();
+</script>
+
+</body>
+</html>
