@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laasya — Poems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --crimson: #9A031E;
+    --olive: #849324;
+    --steel: #437F97;
+    --amber: #FFA630;
+    --bg: #000009;
+    --surface: #0a0a12;
+    --surface2: #111120;
+    --text: #e8e4d9;
+    --muted: #6b6880;
+    --border: #1e1e2e;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── Copy Protection ── */
+  * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background: var(--bg);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.35;
+  }
+
+  /* ── LANDING ── */
+  #landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .landing-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(67,127,151,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(67,127,151,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+
+  .accent-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .blob-1 { width: 400px; height: 400px; background: var(--crimson); top: -100px; left: -100px; }
+  .blob-2 { width: 350px; height: 350px; background: var(--steel); bottom: -80px; right: -80px; }
+  .blob-3 { width: 250px; height: 250px; background: var(--olive); top: 50%; left: 60%; }
+
+  .landing-eyebrow {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .landing-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(3rem, 10vw, 7rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    opacity: 0;
+    animation: fadeUp 0.9s 0.4s forwards;
+    position: relative;
+  }
+
+  .landing-title span.crimson { color: var(--crimson); }
+  .landing-title span.steel   { color: var(--steel); }
+
+  .landing-sub {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 1.5rem;
+    letter-spacing: 0.05em;
+    max-width: 360px;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.7s forwards;
+  }
+
+  .scroll-cta {
+    margin-top: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeUp 0.9s 1s forwards;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .scroll-cta:hover { color: var(--amber); }
+  .scroll-cta .arrow {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--amber));
+    animation: pulse-line 2s ease-in-out infinite;
+  }
+
+  /* ── INDEX SECTION ── */
+  #index {
+    padding: 6rem 2rem 4rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--olive);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .section-heading {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .section-heading::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 1px;
+    background: var(--crimson);
+    margin-top: 1rem;
+  }
+
+  .poem-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--border);
+    background: var(--border);
+  }
+
+  .index-item {
+    background: var(--surface);
+    padding: 0.65rem 1rem;
+    min-height: 48px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-left 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--text);
+    border-left: 2px solid transparent;
+  }
+
+  .index-item:hover {
+    background: var(--surface2);
+    color: var(--amber);
+    border-left-color: var(--amber);
+  }
+
+  .index-item.placeholder {
+    opacity: 0.25;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .index-num {
+    font-size: 0.55rem;
+    color: var(--muted);
+    font-family: 'Roboto Mono', monospace;
+    min-width: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .index-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
+  .index-title .coming {
+    font-family: 'Roboto Mono', monospace;
+    font-style: normal;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── POEMS SECTION ── */
+  #poems {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 2rem 8rem;
+  }
+
+  .poem-block {
+    margin-bottom: 7rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+    scroll-margin-top: 4rem;
+  }
+  .poem-block.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .poem-number {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .poem-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 0.4rem;
+  }
+
+  .poem-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .poem-divider {
+    width: 30px;
+    height: 1px;
+    margin-bottom: 2rem;
+  }
+
+  .poem-divider.c { background: var(--crimson); }
+  .poem-divider.s { background: var(--steel); }
+  .poem-divider.o { background: var(--olive); }
+  .poem-divider.a { background: var(--amber); }
+
+  .poem-body {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 2;
+    font-weight: 300;
+    color: #bbb5c8;
+    white-space: pre-wrap;
+  }
+
+  .poem-body em {
+    font-style: italic;
+    color: var(--text);
+  }
+
+  .poem-body strong {
+    font-weight: 400;
+    color: var(--amber);
+  }
+
+  .poem-separator {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 7rem 0 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem 4rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    font-family: 'Roboto Mono', monospace;
+    line-height: 2;
+  }
+
+  footer em {
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  /* ── BACK TO TOP ── */
+  #back-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 40px;
+    height: 40px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s, color 0.3s, border-color 0.3s;
+    z-index: 100;
+    text-decoration: none;
+  }
+  #back-top.show { opacity: 1; }
+  #back-top:hover { color: var(--amber); border-color: var(--amber); }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    background: rgba(0,0,9,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.4s;
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--amber); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.4; transform: scaleY(1); }
+    50%       { opacity: 1;   transform: scaleY(1.2); }
+  }
+
+  /* ── HIGHLIGHT BARS on accent ── */
+  .poem-title-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .title-accent-bar {
+    width: 3px;
+    min-height: 100%;
+    flex-shrink: 0;
+    align-self: stretch;
+    border-radius: 2px;
+    margin-top: 4px;
+  }
+  .bar-c { background: var(--crimson); }
+  .bar-s { background: var(--steel); }
+  .bar-o { background: var(--olive); }
+  .bar-a { background: var(--amber); }
+
+  @media (max-width: 600px) {
+    .poem-index { grid-template-columns: 1fr; }
+    nav { padding: 1rem; }
+    .nav-links { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#landing">Laasya</a>
+  <ul class="nav-links">
+    <li><a href="#index">Traces of Me</a></li>
+    <li><a href="#poems">Poems</a></li>
+  </ul>
+</nav>
+
+<!-- LANDING -->
+<section id="landing">
+  <div class="landing-grid"></div>
+  <div class="accent-blob blob-1"></div>
+  <div class="accent-blob blob-2"></div>
+  <div class="accent-blob blob-3"></div>
+
+  <p class="landing-eyebrow">a collection of verse</p>
+  <h1 class="landing-title">
+    words i<br><span class="crimson">left</span> <span class="steel">behind</span>
+  </h1>
+  <p class="landing-sub">feelings too large for spoken language, pressed into lines.</p>
+  <a class="scroll-cta" href="#index">
+    read them
+    <span class="arrow"></span>
+  </a>
+</section>
+
+<!-- INDEX -->
+<section id="index">
+  <p class="section-label">a collection</p>
+  <h2 class="section-heading">Traces of Me</h2>
+
+  <div class="poem-index">
+    <a class="index-item" href="#p1" style="border-left-color:var(--crimson)"><span class="index-num">01</span><span class="index-title">Telescopic Love</span></a>
+    <a class="index-item" href="#p2" style="border-left-color:var(--steel)"><span class="index-num">02</span><span class="index-title">I Want That Someone</span></a>
+    <a class="index-item" href="#p3" style="border-left-color:var(--olive)"><span class="index-num">03</span><span class="index-title">Your Eyes Will Be the Death of Me</span></a>
+    <a class="index-item" href="#p4" style="border-left-color:var(--amber)"><span class="index-num">04</span><span class="index-title">The Street He Never Glanced</span></a>
+    <a class="index-item" href="#p5" style="border-left-color:var(--crimson)"><span class="index-num">05</span><span class="index-title">Cold Coffee and Confessions</span></a>
+    <a class="index-item" href="#p6" style="border-left-color:var(--steel)"><span class="index-num">06</span><span class="index-title">The Rim of Your Cup</span></a>
+    <a class="index-item" href="#p7" style="border-left-color:var(--olive)"><span class="index-num">07</span><span class="index-title">He Never Knew the Recipe</span></a>
+    <a class="index-item" href="#p8" style="border-left-color:var(--amber)"><span class="index-num">08</span><span class="index-title">September</span></a>
+    <a class="index-item" href="#p9" style="border-left-color:var(--crimson)"><span class="index-num">09</span><span class="index-title">You Wouldn't Know It By Looking at Her</span></a>
+    <a class="index-item" href="#p10" style="border-left-color:var(--steel)"><span class="index-num">10</span><span class="index-title">I Noticed Her Anyway</span></a>
+    <a class="index-item" href="#p11" style="border-left-color:var(--olive)"><span class="index-num">11</span><span class="index-title">You'd Know If You Knew Her</span></a>
+    <a class="index-item" href="#p12" style="border-left-color:var(--amber)"><span class="index-num">12</span><span class="index-title">Heart Beats Fast</span></a>
+    <a class="index-item" href="#p13" style="border-left-color:var(--crimson)"><span class="index-num">13</span><span class="index-title">Love Hurts Sometimes</span></a>
+    <a class="index-item" href="#p14" style="border-left-color:var(--steel)"><span class="index-num">14</span><span class="index-title">God Stood Me Up</span></a>
+    <!-- PLACEHOLDERS — replace href="#pN" and title when adding new poems -->
+    <a class="index-item placeholder" href="#p15"><span class="index-num">15</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+    <a class="index-item placeholder" href="#p16"><span class="index-num">16</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+    <a class="index-item placeholder" href="#p17"><span class="index-num">17</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+    <a class="index-item placeholder" href="#p18"><span class="index-num">18</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+    <a class="index-item placeholder" href="#p19"><span class="index-num">19</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+    <a class="index-item placeholder" href="#p20"><span class="index-num">20</span><span class="index-title">— <span class="coming">coming soon</span></span></a>
+  </div>
+</section>
+
+<!-- POEM MODAL OVERLAY -->
+<div id="poem-modal" aria-modal="true" role="dialog" aria-label="Poem viewer">
+  <div id="modal-backdrop"></div>
+  <div id="modal-panel">
+    <button id="modal-close" title="Close">✕</button>
+    <div id="modal-content">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<footer>
+  <em>Laasya</em><br><br>
+  © 2026 — All rights reserved.<br>
+  <span style="color:#3a3a4a;">Unauthorised reproduction is prohibited.</span>
+</footer>
+
+<a href="#landing" id="back-top" title="Back to top">↑</a>
+
+<style>
+  /* ── MODAL ── */
+  #poem-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #poem-modal.open { display: flex; }
+
+  #modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,9,0.88);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+  }
+
+  #modal-panel {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent-current, var(--steel));
+    width: min(680px, 92vw);
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 3rem 2.5rem 3.5rem;
+    animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+    scroll-behavior: smooth;
+  }
+
+  #modal-panel::-webkit-scrollbar { width: 4px; }
+  #modal-panel::-webkit-scrollbar-track { background: transparent; }
+  #modal-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  #modal-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  #modal-close:hover { color: var(--text); border-color: var(--text); }
+
+  #modal-content .poem-number {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  #modal-content .poem-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 0.35rem;
+  }
+  #modal-content .poem-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  #modal-content .poem-divider {
+    width: 30px; height: 1px; margin-bottom: 2rem;
+  }
+  #modal-content .poem-divider.c { background: var(--crimson); }
+  #modal-content .poem-divider.s { background: var(--steel); }
+  #modal-content .poem-divider.o { background: var(--olive); }
+  #modal-content .poem-divider.a { background: var(--amber); }
+  #modal-content .poem-body {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 2;
+    font-weight: 300;
+    color: #bbb5c8;
+    white-space: pre-wrap;
+  }
+  #modal-content .poem-body em  { font-style: italic; color: var(--text); }
+  #modal-content .poem-body strong { font-weight: 400; color: var(--amber); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  // ── Copy / Right-click protection ──
+  document.addEventListener('contextmenu',  e => e.preventDefault());
+  document.addEventListener('copy',         e => e.preventDefault());
+  document.addEventListener('cut',          e => e.preventDefault());
+  document.addEventListener('selectstart',  e => e.preventDefault());
+  document.addEventListener('dragstart',    e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (
+      (e.ctrlKey || e.metaKey) && ['c','a','u','s','p','v'].includes(e.key.toLowerCase()) ||
+      e.key === 'F12' ||
+      (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))
+    ) e.preventDefault();
+  });
+
+  // ── Back to top ──
+  const btn = document.getElementById('back-top');
+  window.addEventListener('scroll', () => btn.classList.toggle('show', window.scrollY > 600));
+
+  // ── Poem data ──
+  // ADD NEW POEMS HERE — copy the object shape, increment id, add to array.
+  const poems = [
+    {
+      id: 'p1', num: '01', accent: 'c',
+      title: 'Telescopic Love',
+      subtitle: '',
+      body: `Admiring him from a distance,\nStealing a glance or two,\nSeems enough for the day,\nKeeping my small (tiny) heart content,\nA smile on his face makes mine magically appear,\nOut of nowhere, just like Houdini,\nHe has my attention and love,\nEven if it is not promised to last long,\nEven if he doesn't know it,\nI'm happy he's happy,\nThis shall be with me,\nUntil I make myself worthy of his time and love,\nOh! When my time comes, I will not hesitate,\nBut all I can do right now,\nIs to admire him from a distance,\nFor how long can something hurt you [again and again]?\nAs long as you love it with all your heart,\nBut never be able to hold close to you.\n\n<em>Those accidental touches,\nMakes me wish those were longer</em>`
+    },
+    {
+      id: 'p2', num: '02', accent: 's',
+      title: 'I Want That Someone',
+      subtitle: '',
+      body: `Who do you look for in a crowd?\nTo share your drinks, kisses and nights with,\nTo lay your head, on their lap after a long day,\nSweaty bodies, sore muscles, smiling through it all,\nSomeone who knows you in and out,\nKnows how to tempt fate by teasing you with just a touch,\nTesting your control and patience at a party,\nWhile they sway their hips to music you both love,\nHolding them close until the rest of the world is nothing but a blur,\nKnowing that you would go crazy over them as the days pass,\nIncreasing love, lust and affection for them,\nBeing loved back in ways you could never imagine,\nAll that love, just for you, all yours.\n\n<em>I want that someone</em>`
+    },
+    {
+      id: 'p3', num: '03', accent: 'o',
+      title: 'Your Eyes Will Be the Death of Me',
+      subtitle: '',
+      body: `My heart says shoot your shot,\nBut I don't, I like the way we are right now,\nI'm happy with the way I glance at you,\nMy gaze lingering on your face,\nWith a big fat smile plastered like a tattoo,\nMy eyes, they look at you, like you're mine,\nMine to hug, mine to kiss and mine to hold,\nBut you are not mine, at least not yet,\nI hope for it to happen one day,\nWith no heart of mine stopping me,\nAdorning you with kisses,\nPoems dedicated to you,\nWritten for you, each word uttering your name,\nYour brown eyes, something I can stare into for hours with no rest,\nSimply because I adore you with all I have,\nYour fingers in my open hair, so wild and so rough,\nFind your girl before I steal you off the market,\n'Cause, once you're mine, you're mine alone,\nProudly telling the world, "he's mine!",\nThere's a beautiful echo in those words,\nPride and love in every letter,\nBurning desire to let you write your poems,\nOn my body with that witty tongue of yours,\nLining every curve and stroke perfectly,\nDipping the brush in the watery ink,\nDeep within the bottle to get every single drop,\nBefore bringing it back to trace and shape,\nEnding your piece with a dot of a <strong>kiss.</strong>`
+    },
+    {
+      id: 'p4', num: '04', accent: 'a',
+      title: 'The Street He Never Glanced',
+      subtitle: 'and yet she waited there, every day.',
+      body: `She didn't just tell a story,\nShe left her teeth marks on reality,\nShe left her eyes in his memory,\nHer hugs in his embrace,\nHer smile stayed in the space between his jokes,\nEven if he never looked long enough to see.\nShe wasn't loud about it\nJust present. Soft. Watching.\nShe noticed things\nHe didn't know he revealed.\nLike how he pulled at his sleeves when he was nervous,\nOr how he paused before speaking hard truths.\nShe'd walk a few steps behind,\nSo he'd never feel followed.\nAlways offering help\nBefore he even thought to ask\nBecause she knew he wouldn't.\nShe memorized the exact sound\nOf his half-laugh.\nAnd saved his favorite memes\nWithout ever sending them.\nShe never asked for space in his world,\nBut carved out corners of her own\nJust in case he ever visited.\nShe wonders\nIf he remembers the way she looked at him\nNot with expectation,\nBut like he was a sunrise\nShe couldn't interrupt.\nDid he feel her fingers\nWhen they brushed his in a group photo?\nDid he carry her laugh\nIn the quiet parts of his day?\nShe doesn't want to be unforgettable.\nJust remembered, maybe\nIn the way he likes his coffee\nOr the way she always knew when to go quiet.\nShe never needed to be his home.\nJust a street he once walked\nAnd paused\nBecause something there felt kind.\nShe doesn't know if she mattered.\nIf the softness she left\nEver sank into his skin.\nIf her eyes still live in a corner of his memory,\nOr if she vanished the moment she turned away.\nBut she loved him.\nFrom a distance.\nCarefully.\nDeliberately.\nAnd maybe, just maybe\nThat was enough to leave a mark.`
+    },
+    {
+      id: 'p5', num: '05', accent: 'c',
+      title: 'Cold Coffee and Confessions',
+      subtitle: 'Because the coffee stayed unshared, grew cold with time...',
+      body: `i'll still be h<strong>I</strong>s even if he walks away,\nthere's no way to go back from a guy like him, the one and only.\nmy sun and the moon,\nsmile so warm like sun<strong>L</strong>ight,\nlighting up my world in the dark like moonlight,\nit's july already,\nand s<strong>O</strong>mehow, i still haven't asked you out for a coffee,\nmaybe it's too soon to cross that line,\nor maybe i'm just scared you'll say no,\nbut e<strong>V</strong>ery late-night thought pulls me closer,\nevery sunrise makes me wish i'd tried,\nbecause you're the quiet in my chaos,\nthe comfort i've n<strong>E</strong>ver known,\nyou're the laugh i replay when nights are cold,\nthe dream i dare not speak aloud,\nyou're the reason songs sound sweeter,\nthe pause in time when you look my wa<strong>Y</strong>,\nyour name is the melody i hum unconsciously,\nyour presence makes every ordinary day feel new,\ni w<strong>O</strong>nder if you see it in my eyes,\nhow every word i say is a careful dance,\nhow yo<strong>U</strong>r voice lingers long after you're gone,\nif time's slipping by this fast,\nthen maybe it's time i finally Say it would you?,\nwould you share a coffee and a quiet m<strong>O</strong>ment,\nand Maybe a piece of my heart, too?\nbecause loving you quietly is no longer eno<strong>U</strong>gh,\nand i mean it so mu<strong>C</strong>h my <strong>H</strong>eart chose you`
+    },
+    {
+      id: 'p6', num: '06', accent: 's',
+      title: 'The Rim of Your Cup',
+      subtitle: 'Because the coffee grew cold, and its scent outlasted us.',
+      body: `It was never about the coffee,\nBut the warmth of shared silences,\nThe way our hands almost touched,\nOver steaming mugs and unspoken words.\nIn that little café,\nTime felt like a gentle pause,\nA breath held between us,\nAs we navigated the spaces,\nWhere our thoughts intertwined.\nI wanted to tell you\nAbout the dreams I tucked away,\nLike sugar packets in my bag,\nSweet and unassuming,\nWaiting for the right moment to spill.\nBut the words got lost\nIn the froth of our conversations,\nDrowned in laughter and the clinking,\nOf cups that held our secrets,\nLike fragile porcelain.\nSo here's my confession,\nI loved you in the quiet moments,\nIn the way you stirred your coffee\nWith a distant look in your eyes,\nAs if you were searching for something,\nJust beyond the rim of your cup.\nAnd though we never crossed that line,\nI hope you felt it too...\nThe unspoken bond,\nThat lingered in the air,\nLike the rich aroma of coffee,\nLong after the last sip.\nMaybe one day,\nWe'll find ourselves back there,\nIn that cozy corner,\nWith the world outside fading away,\nAnd the courage to say,\nAll the things we left unsaid.`
+    },
+    {
+      id: 'p7', num: '07', accent: 'o',
+      title: 'He Never Knew the Recipe',
+      subtitle: '',
+      body: `I ache for his love the way pasta absorbs salt\nnot because it craves it,\nbut because something softens\nwhen the water is just warm enough.\nHe moves with that quiet, athletic certainty\nshoulders broad with storms he never speaks of,\neyes the color of autumn bark, steeped in thought.\nHe doesn't ask for attention,\nhe just breathes,\nand the whole room listens.\nHe drinks his coffee black,\nas if bitterness is a language only he understands,\nNo sugar, no cream,\njust bold, honest intensity,\nthe kind that makes you want to ask questions\njust to hear how the answers sound in his voice.\nAnd god, the way he speaks\nslow, deliberate,\nlike knowledge is something sacred,\nand every word is a prayer,\neach sentence is a door he's letting you walk through,\nif you're patient enough to wait for the key.\nI burn dinner sometimes,\nnot because I forget,\nbut because I get lost\nwatching how he moves without needing permission.\nHow he exists like he's carved from certainty,\nand silence...\nI keep making too much pasta,\nMaybe because some small, foolish part of me,\nhopes he'll sit across from me one evening,\nunwind enough to stay.\nTo teach me not just facts,\nbut the rhythm of his world\nhow he sees it, how he thinks,\nwhat he holds sacred.\nI want to learn everything from him.\nNot because I'm empty,\nbut because when he explains things,\nthey feel like secrets being handed to me gently,\nlike knowledge that remembers your name.\nHe doesn't talk about love.\nI don't ask.\nBut I see it maybe\nin the way he passes the salt\nwithout needing to be told.\nIn how he remembers how I like my food,\neven if he never eats with me.\nI don't know if he feels the same,\nbut I hope...\nsomewhere between the boiling pot and my quiet hands,\nbetween the caffeine in his cup and the warmth in my gaze,\nhe senses it.\nThat I would offer everything.\nThat this isn't just about dinner.\nThat this is love,\nserved quietly,\nseasoned with hope,\nwaiting...\nfor him to taste.`
+    },
+    {
+      id: 'p8', num: '08', accent: 'a',
+      title: 'September',
+      subtitle: '',
+      body: `September, if I had to call you something,\nI'd call you the month of calmness,\nFresh starts and exploring new charts,\nComposure and home to the reserved,\nThe feeling of hugs in your autumn falls,\nThe soft browns and beiges in every corner,\nBecoming your eyes and ears,\nSomething to lean on, fall asleep like there's no tomorrow.\nYou're the month that feels like a warm hug,\nIf seasons were described in rain,\nSummer's your drizzle,\nAnd you're his hurricane.\nYou're the warmth between shifting winds,\nThe last soft kiss before the world gets cold.\nThe kind of quiet that makes you miss someone\nyou haven't even said goodbye to.\nI think if love had a weather pattern,\nit would look a lot like you\ngentle at first,\nbut impossible not to notice when it leaves.\nYou're the month that makes me want to write,\nTo spill my heart onto paper,\nTo capture the way you make me feel\nIn every word, every line, every verse.\nYou're the calm before the storm,\nThe promise of something beautiful,\nThat lingers in the air,\nLike the scent of fallen leaves\nAnd the whisper of a breeze.\nYou're the month that reminds me\nThat even in the chaos of life,\nThere's beauty in the stillness,\nA chance to breathe, to reflect,\nTo find solace in the changing leaves.\nYou're the month that holds my heart,\nA gentle reminder that love,\nLike the seasons, is ever-changing,\nBut always, always beautiful.\n\n<em>A quiet goodbye we never gave,\nBut always carried...</em>`
+    },
+    {
+      id: 'p9', num: '09', accent: 'c',
+      title: 'You Wouldn\'t Know It By Looking at Her',
+      subtitle: '',
+      body: `You wouldn't know it by looking at her\nhow many unfinished thoughts she carries like splinters\nbeneath the surface of a conversation.\nShe listens the way some people mumble,\nquietly,\ndesperate ly,\nnever expecting to be heard back.\nShe makes room where there is none,\nFills silence without speaking,\nHer presence hums,\nin the corners of rooms,\nwhere no one else looks.\nShe has never asked for much,\nShe has learned not to,\nNeed is a dangerous thing,\nwhen you've had to make your own warmth,\nin the middle of winter,\nwith nothing but memory,\nand a soft voice you forgot was yours.\nShe doesn't collapse anymore.\nShe pauses.\nShe adjusts.\nShe folds herself smaller\nand calls it survival.\nCalls it grace.\nCalls it fine.\nShe is the kind of tired\nthat cannot be undone with rest\nthe kind built from being the constant\nin everyone else's storm\nand never being asked\nhow much it cost her\nto stay that still\nfor that long.\nShe leaves pieces of herself in small places\na joke she knows will land,\na look that says "go on, I'm listening,"\na pause before "it's okay, I'm okay"\nwhen it isn't.\nAnd when she says she's fine,\nyou believe her.\nBecause you want to.\nBecause the alternative\nis realizing\nno one ever stopped long enough\nto see how much she's carrying\njust to make you feel lighter.\nYou wouldn't know it by looking at her.\nBut sometimes,\nshe doesn't speak\nbecause there's nothing left\nthat hasn't already been given away.`
+    },
+    {
+      id: 'p10', num: '10', accent: 's',
+      title: 'I Noticed Her Anyway',
+      subtitle: 'the girl who always paused.',
+      body: `She wasn't loud.\nShe didn't ask for attention.\nIn fact, I almost missed her\ntucked between louder laughter\nand people who knew how to take up space,\nwithout asking permission.\nBut something about her made me stop.\nIt wasn't what she said\nit was the way she said less.\nThe way her silence wasn't empty.\nIt was listening.\nIt was offering.\nIt was holding stories\nshe didn't think anyone would stay long enough to hear.\nShe had that look in her eye\nthe one people carry\nafter they've been interrupted too many times,\nand learned to finish conversations in their head\ninstead of out loud.\nShe didn't rush her words.\nShe measured them.\nNot because she was unsure,\nbut because she understood\nwhat it meant\nto be careful with truth.\nShe sat like someone who had held too much\nand didn't want to spill it on anyone else.\nLike someone who made herself smaller\nso no one else had to be uncomfortable.\nAnd yet,\nthere was something in her pause\nthat felt louder than the whole room.\nLike she was always almost saying\nthe thing that would change everything,\nbut only if you cared enough,\nto ask again,\nafter she said "it's fine."\nI don't know her story.\nI just know\nI noticed her anyway.\nThe way her hands moved when she talked,\nas if translating feelings\ninto air.\nThe way her voice softened\nat the exact moment\nthe world got too sharp.\nThe girl who always paused\nnot because she didn't know what to say,\nbut because she was trying to decide\nif anyone in the room\nwould be kind enough\nto hear it all.`
+    },
+    {
+      id: 'p11', num: '11', accent: 'o',
+      title: 'You\'d Know If You Knew Her',
+      subtitle: '',
+      body: `She laughs now.\nLoud, lopsided,\nthe kind of laugh that doesn't ask permission\nbefore crashing into a room.\nNot everyone gets the joke\nbut that's the thing.\nShe doesn't care if they do.\nShe's not performing anymore.\nShe tells stories that make no sense,\njokes that trip over themselves halfway through\nand grins like it's the funniest thing in the world\nbecause it is.\nTo her.\nAnd to the ones who know her best,\nwho've learned to connect the dots between the chaos\nand know exactly where her punchline is hiding.\nShe still says,\n"I know you know me, you'll understand why I said that."\nAnd if you don't?\nThat's fine.\nShe's no longer wasting breath on people\nwho need her to translate her joy\ninto something smaller.\nShe doesn't flinch anymore\nwhen the silence in a room gets heavy.\nShe's learned how to breathe through it\nwithout anyone noticing.\nHow to pull herself back\nwithout a sound.\nHow to stop the unraveling\nbefore it begins,\nlike some kind of private magic\nshe taught herself\non nights she never talks about.\nShe's smiling in photos now.\nReally smiling.\nBut only the ones who've seen her up close\nthe ones who remember how her lips used to curl\njust enough to pretend...\nthey're the ones who know the difference.\nShe no longer apologizes for being too much,\nor not enough,\nor whatever version of herself someone once asked her to be.\nShe is wildly, quietly free.\nShe cries less.\nNot because she feels less.\nBut because she's stopped breaking\nin places no one bothers to clean up.\nAnd when the world tightens its grip,\nwhen the room gets too loud\nand the air too thin\nshe has people who know how to look at her\nwithout saying a word,\nand still remind her\nthat she's not alone in it anymore.\nShe is the girl who once paused.\nAnd now\nshe speaks in laughter\nand doesn't care if you're keeping up.`
+    },
+    {
+      id: 'p12', num: '12', accent: 'a',
+      title: 'Heart Beats Fast',
+      subtitle: '',
+      body: `There's a small part of me,\nThat comes alive only when—\nWhen you enter the room,\nAnd yet I cannot find the words to show—\nShow you the way you make sure it breathes,\nStays alive to see your stupid grin and pretty smiles,\nOh, them creases in your cheeks under your eyes when—\nWhen you smile your loudest,\nA simple glance across the room,\nAnd there lies my charging station,\nYour eyes, your smile and oh, your laugh—\nIt makes my head turn to look at you,\nAnywhere I am, anywhere you are,\nTo see what made you laugh maybe—\nMaybe I hope it's me, but I'll take whatever part of you I can get, or maybe—\nMaybe I'd learn your favourite things,\nEither way,\nIt comes alive only when you are in the room.`
+    },
+    {
+      id: 'p13', num: '13', accent: 'c',
+      title: 'Love Hurts Sometimes',
+      subtitle: '',
+      body: `sometimes love hurts in ways you cannot fathom,\nit hurts in a way where you never knew it could hurt,\nit hurts in places when you least expect it, could be a park, a mall or even your home,\nit hurts with a reason unknown to humankind, that even scientists and biologists cannot decipher,\nit hurts in a magnitude which makes you ask "why, just why?" to the universe,\nit hurts in a form of pain that makes you feel every last nerve and fiber in your heart is just dying in silence because of one text or word\nit hurts so much that it makes you wanna look the other way only to find yourself wondering if they're looking at you,\nit hurts so little when you feel even a faintest glimpse of their eyes when you close yours,\nit hurts when all u can do is walk away, because u would rather do that than lose them slowly, like poison`
+    },
+    {
+      id: 'p14', num: '14', accent: 's',
+      title: 'God Stood Me Up',
+      subtitle: '',
+      body: `God stood me up,\ni know not of whether he thinks I'm too weak to protect,\nA sacrifice for the greater good,\nOr whether he views me as one of his many many strong soldiers,\nGod stood me up,\nLaid barrels of gold and silvers,\nOpened his arms, stating,\n"Choose, my child"\nBut all I ever wanted was his comfort,\nHis protection and his promise of safety for every child of his,\nGod stood me up,\nWhen I needed him the most,\nIn sorrow and sleepless nights,\nFrom all the cruel things my ear have heard,\nEars, created by him, for me, his child,\nFlawed by him, over the strength of my heart,\nGod stood me up,\nWhen my heart flawed in ways I couldn't cry about,\nIn places i couldnt bleed and people i couldn't trust.\n\n<strong>He. Stood. Me. Up.</strong>`
+    },
+    // ── ADD NEW POEMS HERE ──
+    // {
+    //   id: 'p15', num: '15', accent: 'o',  ← cycle: c / s / o / a
+    //   title: 'Your Poem Title',
+    //   subtitle: 'optional tagline or leave empty string',
+    //   body: `line one\nline two\n\n<em>italic lines</em>\n<strong>bold word</strong>`
+    // },
+  ];
+
+  // ── Modal logic ──
+  const modal   = document.getElementById('poem-modal');
+  const content = document.getElementById('modal-content');
+  const backdrop = document.getElementById('modal-backdrop');
+  const closeBtn = document.getElementById('modal-close');
+  const panel   = document.getElementById('modal-panel');
+
+  const accentColors = { c: '#9A031E', s: '#437F97', o: '#849324', a: '#FFA630' };
+
+  function openPoem(id) {
+    const poem = poems.find(p => p.id === id);
+    if (!poem) return;
+    panel.style.borderTopColor = accentColors[poem.accent] || '#437F97';
+    content.innerHTML = `
+      <p class="poem-number">${poem.num} / ${poems.length}</p>
+      <h2 class="poem-title">${poem.title}</h2>
+      ${poem.subtitle ? `<p class="poem-subtitle">${poem.subtitle}</p>` : ''}
+      <div class="poem-divider ${poem.accent}"></div>
+      <div class="poem-body">${poem.body}</div>
+    `;
+    panel.scrollTop = 0;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Wire up index links
+  document.querySelectorAll('.index-item:not(.placeholder)').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      openPoem(id);
+    });
+  });
+
+  backdrop.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
